@@ -1,0 +1,1 @@
+from framework.auth.configuration.azure_auth_config import AzureAdConfiguration
