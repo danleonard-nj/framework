@@ -189,3 +189,14 @@ images/pybase/framework/framework/utilities/pinq.py
 images/pybase/framework/framework/utilities/url_utils.py
 images/pybase/framework/framework/validators/__init__.py
 images/pybase/framework/framework/validators/nulls.py
+
+
+key
+config.json
+config.dev.json
+config.local.json
+.env
+git-*
+*Dockerfile
+**/__pycache__
+**/.vscode

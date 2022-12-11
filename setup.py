@@ -1,6 +1,15 @@
+import json
 from setuptools import setup, find_packages
+import logging
+logging.basicConfig(level=logging.INFO)
 
-VERSION = '0.0.1'
+with open('manifest.json', 'r') as file:
+    manifest = json.loads(file.read())
+
+
+version = manifest.get('version')
+logging.info(f'Manifest version: {version}')
+
 DESCRIPTION = 'Framework'
 LONG_DESCRIPTION = 'Framework'
 
@@ -8,7 +17,7 @@ LONG_DESCRIPTION = 'Framework'
 setup(
     # the name must match the folder name 'verysimplemodule'
     name="framework",
-    version=VERSION,
+    version=version,
     author="Dan Leonard",
     author_email="dcl525@gmail.com",
     description=DESCRIPTION,
