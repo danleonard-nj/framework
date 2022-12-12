@@ -1,3 +1,27 @@
 {
-  "version": "0.0.2"
+  "version": "0.0.3",
+  "require": [
+    "flask",
+    "pandas",
+    "gunicorn",
+    "gevent",
+    "requests",
+    "azure-identity",
+    "azure-keyvault-secrets",
+    "azure-keyvault-certificates",
+    "azure-keyvault-keys",
+    "cryptography",
+    "pyOpenSSL",
+    "PyJWT",
+    "python-dotenv",
+    "swagger-gen",
+    "redis",
+    "pymongo",
+    "redis",
+    "azure-servicebus",
+    "quart",
+    "httpx",
+    "aioredis",
+    "motor"
+  ]
 }

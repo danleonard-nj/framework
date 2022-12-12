@@ -1,6 +1,8 @@
 import json
-from setuptools import setup, find_packages
 import logging
+
+from setuptools import find_packages, setup
+
 logging.basicConfig(level=logging.INFO)
 
 with open('manifest.json', 'r') as file:
@@ -8,7 +10,10 @@ with open('manifest.json', 'r') as file:
 
 
 version = manifest.get('version')
+requirements = manifest.get('require')
+
 logging.info(f'Manifest version: {version}')
+logging.info(f'Manifest requirements: {requirements}')
 
 DESCRIPTION = 'Framework'
 LONG_DESCRIPTION = 'Framework'
@@ -24,9 +29,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     # include_package_data=True,
     packages=find_packages(),
-    install_requires=['flask'],  # add any additional packages that
-    # needs to be installed along with your package. Eg: 'caer'
-
+    install_requires=[requirements],
     keywords=['python', 'framework'],
     classifiers=[
         "Development Status :: 3 - Alpha",
