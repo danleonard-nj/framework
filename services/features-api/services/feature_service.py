@@ -1,13 +1,10 @@
-from data.feature_repository import FeatureRepository
-from models.feature import (
-    CreateFeatureRequest,
-    Feature,
-    FeatureType,
-    SetFeatureRequest
-)
 from typing import List
 
 from framework.logger.providers import get_logger
+
+from data.feature_repository import FeatureRepository
+from models.feature import (CreateFeatureRequest, Feature, FeatureType,
+                            SetFeatureRequest)
 
 logger = get_logger(__name__)
 
