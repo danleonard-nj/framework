@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: azureks.azurecr.io/features/feature-api
+  repository: azureks.azurecr.io/kube-tools/features-api
   pullPolicy: Always
   tag: "latest"
 
