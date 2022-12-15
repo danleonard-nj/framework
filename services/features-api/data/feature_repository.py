@@ -1,23 +1,27 @@
-from framework.data.mongo_repository import MongoRepositoryAsync
-from framework.logger.providers import get_logger
+from framework.logger import get_logger
+from motor.motor_asyncio import AsyncIOMotorClient
 
 from constants.mongo import MongoConstants
+from data.async_mongo_repository import MongoRepositoryAsync
 
 logger = get_logger(__name__)
 
 
-def update_command(definition):
-    return {'$set': definition}
-
-
 class FeatureRepository(MongoRepositoryAsync):
-    def __init__(self, container=None):
-        self.initialize(
-            container=container,
-            collection=MongoConstants.COLLECTION_NAME,
-            database=MongoConstants.DATABASE_NAME)
+    def __init__(
+        self,
+        client: AsyncIOMotorClient
+    ) -> None:
 
-    async def feature_exists(self, feature_key):
+        super().__init__(
+            client=client,
+            collection=MongoConstants.FeatureCollection,
+            database=MongoConstants.DatabaseName)
+
+    async def feature_key_exists(
+        self,
+        feature_key: str
+    ):
         exists = await self.get({
             'feature_key': feature_key
         })
