@@ -19,6 +19,8 @@ class FeatureClientAsync:
         self.__base_url = configuration.features.get('base_url')
         self.__api_key = configuration.features.get('api_key')
 
+        self.__enabled = configuration.features.get(
+            'is_enabled', True)
         self.__header_key = configuration.features.get(
             'header_key', DEFAULT_HEADER_KEY)
 
