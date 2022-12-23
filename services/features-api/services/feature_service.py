@@ -1,6 +1,6 @@
 from datetime import datetime
 import json
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from framework.logger.providers import get_logger
 
@@ -141,6 +141,44 @@ class FeatureService:
 
         feature = Feature.from_entity(
             data=entity)
+
+        return EvaluateFeatureResponse(
+            feature=feature)
+
+    async def evaluate_feature_update(
+        self,
+        feature_key: str,
+        value: Any
+    ) -> EvaluateFeatureResponse:
+        '''
+        Evaluate a feature
+        '''
+
+        ArgumentNullException.if_none_or_whitespace(
+            feature_key, 'feature_key')
+        ArgumentNullException.if_none_or_whitespace(
+            value, 'value')
+
+        logger.info(f'Setting feature {feature_key}: {value}')
+        entity = await self.__repository.get({
+            'feature_key': feature_key
+        })
+
+        if entity is None:
+            raise FeatureNotFoundException(
+                value_type='key',
+                value=feature_key)
+
+        feature = Feature.from_entity(
+            data=entity)
+
+        feature.update_feature(
+            value=value)
+
+        await self.__repository.replace(
+            selector=feature.get_selector(),
+            document=feature.to_dict())
+        logger.info(f'Updated feature {feature_key}: {value}')
 
         return EvaluateFeatureResponse(
             feature=feature)

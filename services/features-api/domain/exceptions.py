@@ -43,3 +43,9 @@ class InvalidFeatureTypeException(Exception):
     def __init__(self, feature_type, *args: object) -> None:
         super().__init__(
             f"Feature type '{feature_type}' is not a supported feature type")
+
+
+class InvalidFeatureValueException(Exception):
+    def __init__(self, value, feature_type, *args: object) -> None:
+        super().__init__(
+            f"The value '{value}' is not valid for feature of type '{feature_type}'")

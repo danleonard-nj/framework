@@ -1,2 +1,2 @@
-framework==0.0.5
+framework==0.1.2
 uvicorn

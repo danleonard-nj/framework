@@ -73,6 +73,20 @@ class FeatureProvider:
 
         return result.to_dict()
 
+    async def evaluate_feature_update(
+        self,
+        feature_key: str,
+        body: Dict
+    ):
+        update_request = UpdateFeatureRequest(
+            data=body)
+
+        result = await self.__feature_service.evaluate_feature_update(
+            feature_key=feature_key,
+            value=update_request.value)
+
+        return result.to_dict()
+
     async def update_feature(
         self,
         body: Dict

@@ -13,6 +13,14 @@ class EvaluateFeatureResponse(Serializable):
         self.value = feature.value
 
 
+class EvaluateFeatureUpdateRequest(Serializable):
+    def __init__(
+        self,
+        data: Dict
+    ):
+        self.value = data.get('value')
+
+
 class UpdateFeatureRequest:
     @property
     def cardinality_key(

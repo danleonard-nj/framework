@@ -55,11 +55,22 @@ async def get_all(container):
 
 
 @feature_bp.with_key_auth('/api/feature/evaluate/<feature_key>', methods=['GET'], key_name='feature-api')
-async def evaluate_feature(container, feature_key):
+async def get_evaluate_feature(container, feature_key):
     feature_provider: FeatureProvider = container.resolve(FeatureProvider)
 
     return await feature_provider.evaluate_feature(
         feature_key=feature_key)
+
+
+@feature_bp.with_key_auth('/api/feature/evaluate/<feature_key>', methods=['PUT'], key_name='feature-api')
+async def evaluate_feature_update(container, feature_key):
+    feature_provider: FeatureProvider = container.resolve(FeatureProvider)
+
+    body = await request.get_json()
+
+    return await feature_provider.evaluate_feature_update(
+        feature_key=feature_key,
+        body=body)
 
 
 @feature_bp.with_key_auth('/api/feature', methods=['PUT'], key_name='feature-api')

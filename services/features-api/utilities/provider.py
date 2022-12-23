@@ -1,3 +1,4 @@
+from typing import List
 from framework.auth.azure import AzureAd
 from framework.auth.configuration import AzureAdConfiguration
 from framework.configuration.configuration import Configuration
@@ -8,6 +9,25 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from data.feature_repository import FeatureRepository
 from providers.feature_provider import FeatureProvider
 from services.feature_service import FeatureService
+
+
+class AdRole:
+    Read = 'Features.Read'
+    Write = 'Features.Write'
+    All = 'Features.All'
+
+
+def has_role(
+    token_roles: List[str],
+    required_role: str
+) -> bool:
+    if AdRole.All in token_roles:
+        return True
+
+    return any([
+        role == required_role
+        for role in token_roles
+    ])
 
 
 def configure_azure_ad(service_descriptors):
@@ -22,8 +42,16 @@ def configure_azure_ad(service_descriptors):
         issuer=ad_auth.issuer)
 
     azure_ad.add_authorization_policy(
-        name='default',
-        func=lambda t: True)
+        name='read',
+        func=lambda t: has_role(
+            token_roles=t.get('roles', []),
+            required_role=AdRole.Read))
+
+    azure_ad.add_authorization_policy(
+        name='write',
+        func=lambda t: has_role(
+            token_roles=t.get('roles', []),
+            required_role=AdRole.Write))
 
     return azure_ad
 

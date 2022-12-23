@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 
 from framework.serialization import Serializable
 
-from domain.exceptions import ArgumentNullException
+from domain.exceptions import ArgumentNullException, InvalidFeatureValueException
 from domain.rest import CreateFeatureRequest
 from utilities.cardinality import get_cardinality_key
 
@@ -25,6 +25,16 @@ class FeatureType:
         return [cls.Boolean,
                 cls.Text,
                 cls.Json]
+
+    @classmethod
+    def get_type_map(
+        cls
+    ) -> Dict[str, type]:
+        return {
+            cls.Boolean: bool,
+            cls.Text: str,
+            cls.Json: dict
+        }
 
 
 class Feature(Serializable):
@@ -70,7 +80,11 @@ class Feature(Serializable):
         ArgumentNullException.if_none_or_whitespace(
             value, 'value')
 
+        self.__validate_value_type(
+            value=value)
+
         self.value = value
+        self.modified_date = datetime.utcnow()
 
     def get_selector(
         self
@@ -88,6 +102,18 @@ class Feature(Serializable):
 
         valid_types = FeatureType.types()
         return self.feature_type in valid_types
+
+    def __validate_value_type(
+        self,
+        value: Any
+    ) -> None:
+        type_map = FeatureType.get_type_map()
+        required = type_map[self.feature_type]
+
+        if not isinstance(value, required):
+            raise InvalidFeatureValueException(
+                value=value,
+                feature_type=self.feature_type)
 
     @staticmethod
     def from_entity(data):
