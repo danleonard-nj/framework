@@ -69,21 +69,21 @@ class ServiceProvider:
 
     def resolve(self, _type):
         start_time = time()
-        logger.info(f"Resolving service for type: {_type.__name__}")
+        logger.debug(f"Resolving service for type: {_type.__name__}")
         registration = self.__get_registered_dependency(
             implementation_type=_type)
-        logger.info(f"Service type: {registration.lifetime}")
+        logger.debug(f"Service type: {registration.lifetime}")
 
         if registration.lifetime == 'transient':
             # Activate an instance of the transient dependency using the
             # available built types
             instance = registration.activate(self.__dependency_lookup)
             end_time = time()
-            logger.info(f'Dependency resolved in: {end_time - start_time}')
+            logger.debug(f'Dependency resolved in: {end_time - start_time}')
             return instance
         elif registration.lifetime == 'singleton':
             end_time = time()
-            logger.info(f'Dependency resolved in: {end_time - start_time}')
+            logger.debug(f'Dependency resolved in: {end_time - start_time}')
             return registration.instance
 
     def __verify_singleton(self, registration: DependencyRegistration):
@@ -151,18 +151,18 @@ class ServiceProvider:
                 raise Exception(
                     f'Dependency chain is not valid, check your registration types')
 
-        logger.info('Built the provider!')
+        logger.debug('Built the provider!')
 
     def __build_singletons(self):
         for registration in [x for x in self.singleton_registrations if not x.built]:
             if len(registration.constructor_params) == 0:
-                logger.info(f"Building type: {registration.type_name}")
+                logger.debug(f"Building type: {registration.type_name}")
 
                 registration.activate(self.__dependency_lookup)
                 self.__set_built_dependency(registration=registration)
 
             elif self.__can_build_type(registration=registration):
-                logger.info(f"Building type: {registration.type_name}")
+                logger.debug(f"Building type: {registration.type_name}")
 
                 registration.activate(self.__dependency_lookup)
                 self.__set_built_dependency(registration=registration)

@@ -1,3 +1,7 @@
+from deprecated import deprecated
+
+
+@deprecated
 def select(items, func):
     results = []
     for item in items:
@@ -6,6 +10,7 @@ def select(items, func):
     return results
 
 
+@deprecated
 def where(items, func):
     results = []
     for item in items:
@@ -13,6 +18,7 @@ def where(items, func):
             results.append(item)
 
 
+@deprecated
 def first(items, func=None):
     for item in items:
         if func is None:
@@ -21,6 +27,7 @@ def first(items, func=None):
             return item
 
 
+@deprecated
 def any(items, func):
     for item in items:
         if func(item):
@@ -28,6 +35,7 @@ def any(items, func):
     return False
 
 
+@deprecated
 def chunks(lst, n):
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
