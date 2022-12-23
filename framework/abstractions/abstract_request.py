@@ -1,8 +1,11 @@
 import inspect
 from abc import ABC
 
+from flask import Flask
 from flask import Request as FlaskRequest
+from flask import request as flask_request
 from quart import Request as QuartRequest
+from quart import request as quart_request
 
 from framework.logger.providers import get_logger
 
