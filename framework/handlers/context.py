@@ -8,6 +8,6 @@ def preserve_source_context(func):
     if not hasattr(request, 'source_context'):
         request.source_context = []
 
-    logger.info(f'Storing source context: {func}')
-    logger.info(f'Stored context: {request.source_context}')
+    logger.debug(f'Storing source context: {func}')
+    logger.debug(f'Stored context: {request.source_context}')
     request.source_context.append(func)

@@ -1,11 +1,9 @@
+import inspect
 from abc import ABC
+
 from flask import Request as FlaskRequest
 from quart import Request as QuartRequest
-from flask import request as flask_request
-from quart import request as quart_request
-import inspect
 
-from flask import Flask
 from framework.logger.providers import get_logger
 
 logger = get_logger(__name__)
@@ -36,10 +34,10 @@ class RequestContextProvider:
             raise RequestContextProviderException(
                 'The provider is not initialized')
 
-        logger.info(f'Abstract server type: {cls.AbstractServerType}')
+        logger.debug(f'Abstract server type: {cls.AbstractServerType}')
         _globals = inspect.currentframe().f_globals
 
         _request = _globals.get(f'{cls.AbstractServerType}_request')
-        logger.info(f'Request context: {_request}')
+        logger.debug(f'Request context: {_request}')
 
         return _request

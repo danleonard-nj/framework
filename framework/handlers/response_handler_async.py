@@ -88,7 +88,7 @@ def response_handler(func: Callable) -> Callable:
     '''
 
     async def wrapper(*args, **kwargs) -> Tuple[dict, int]:
-        logger.info('Inside response handler wrapper')
+        logger.debug('Response handler invoked')
         preserve_source_context(func=func)
 
         try:
