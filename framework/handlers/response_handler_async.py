@@ -6,6 +6,7 @@ from framework.handlers.context import preserve_source_context
 from framework.logger.providers import get_logger
 from framework.utilities.object_utils import getattr_or_none
 from jwt.exceptions import ExpiredSignatureError
+from framework.serialization import Serializable
 
 logger = get_logger(__name__)
 
@@ -80,6 +81,13 @@ async def handle_response(
         return error_response(ex)
 
 
+def __intercept_serializables(result):
+    if isinstance(result, Serializable):
+        logger.debug('Intercepted serializable response')
+        return result.to_dict()
+    return result
+
+
 def response_handler(func: Callable) -> Callable:
     '''
     Response handler decorator
@@ -92,7 +100,12 @@ def response_handler(func: Callable) -> Callable:
         preserve_source_context(func=func)
 
         try:
-            return await func(*args, **kwargs)
+            result = await func(*args, **kwargs)
+
+            # Intercept responses that implement
+            # Serializable and call to_dict()
+            return __intercept_serializables(
+                result=result)
 
         except Exception as ex:
             context = RequestContextProvider.get_request_context()
