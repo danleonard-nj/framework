@@ -49,3 +49,9 @@ class InvalidFeatureValueException(Exception):
     def __init__(self, value, feature_type, *args: object) -> None:
         super().__init__(
             f"The value '{value}' is not valid for feature of type '{feature_type}'")
+
+
+class DateTimeParsingException(Exception):
+    def __init__(self, datetime_str, *args: object) -> None:
+        super().__init__(
+            f"Failed to parse datetime string '{datetime_str}'")

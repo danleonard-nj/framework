@@ -4,6 +4,7 @@ from framework.logger.providers import get_logger
 from framework.serialization.serializer import configure_serializer
 from quart import Quart
 
+from routes.events import events_bp
 from routes.features import feature_bp
 from routes.health import health_bp
 from utilities.provider import ContainerProvider
@@ -14,6 +15,7 @@ app = Quart(__name__)
 
 app.register_blueprint(health_bp)
 app.register_blueprint(feature_bp)
+app.register_blueprint(events_bp)
 
 ContainerProvider.initialize_provider()
 InternalProvider.bind(ContainerProvider.get_service_provider())

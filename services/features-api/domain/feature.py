@@ -2,39 +2,112 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List
 
+from framework.exceptions.nulls import ArgumentNullException
 from framework.serialization import Serializable
 
-from domain.exceptions import ArgumentNullException, InvalidFeatureValueException
+from domain.exceptions import (InvalidFeatureTypeException,
+                               InvalidFeatureValueException)
 from domain.rest import CreateFeatureRequest
 from utilities.cardinality import get_cardinality_key
 
 
 class FeatureType:
     Boolean = 'boolean'
+    Number = 'number'
     Text = 'text'
     Json = 'json'
 
     @classmethod
-    def types(
+    def options(
         cls
     ) -> List[str]:
         '''
-        Get all valid feature types
+        Get all known valid feature type
+        option
         '''
 
         return [cls.Boolean,
+                cls.Number,
                 cls.Text,
                 cls.Json]
 
     @classmethod
-    def get_type_map(
+    def is_known_type(
+        cls,
+        feature_type: str
+    ):
+        '''
+        Verify a feature type is known and
+        valid
+        '''
+
+        ArgumentNullException.if_none_or_whitespace(
+            feature_type, 'feature_type')
+
+        return feature_type in cls.options()
+
+    @classmethod
+    def get_type_mapping(
         cls
     ) -> Dict[str, type]:
+        '''
+        Get the allowed system types mapping
+        given all feature types
+        '''
+
         return {
-            cls.Boolean: bool,
-            cls.Text: str,
-            cls.Json: dict
+            cls.Boolean: [bool],
+            cls.Text: [str],
+            cls.Json: [dict],
+            cls.Number: [float, int]
         }
+
+    @classmethod
+    def get_types(
+        cls,
+        feature_type: str
+    ) -> Dict[str, type]:
+        '''
+        Get the allowed system types for a
+        given feature type
+        '''
+
+        ArgumentNullException.if_none_or_whitespace(
+            feature_type, 'feature_type')
+
+        if not cls.is_known_type(
+                feature_type=feature_type):
+            raise InvalidFeatureTypeException(
+                feature_type=feature_type)
+
+        mapping = cls.get_type_mapping()
+        return mapping[feature_type]
+
+    @classmethod
+    def is_value_valid(
+        cls,
+        feature_type: str,
+        value: Any
+    ) -> bool:
+
+        ArgumentNullException.if_none_or_whitespace(
+            feature_type, 'feature_type')
+        ArgumentNullException.if_none(
+            value, 'value')
+
+        if not cls.is_known_type(
+                feature_type=feature_type):
+            raise InvalidFeatureTypeException(
+                feature_type=feature_type)
+
+        mapped_types = cls.get_types(
+            feature_type=feature_type)
+
+        for mapped_type in mapped_types:
+            if isinstance(value, mapped_type):
+                return True
+
+        return False
 
 
 class Feature(Serializable):
@@ -57,6 +130,7 @@ class Feature(Serializable):
         name: str,
         description: str,
         value: Any,
+        last_evaluated: datetime,
         created_date: datetime,
         modified_date: datetime = None,
     ):
@@ -66,8 +140,26 @@ class Feature(Serializable):
         self.name = name
         self.description = description
         self.value = value
+        self.last_evaluated = last_evaluated
         self.created_date = created_date
         self.modified_date = modified_date
+
+        self.__validate()
+
+    def __validate(
+        self
+    ):
+        if not FeatureType.is_known_type(
+                feature_type=self.feature_type):
+            raise InvalidFeatureTypeException(
+                feature_type=self.feature_type)
+
+        if not FeatureType.is_value_valid(
+                feature_type=self.feature_type,
+                value=self.value):
+            raise InvalidFeatureValueException(
+                value=self.value,
+                feature_type=self.feature_type)
 
     def update_feature(
         self,
@@ -93,28 +185,6 @@ class Feature(Serializable):
             'feature_id': self.feature_id
         }
 
-    def is_valid_feature_type(
-        self
-    ) -> bool:
-        '''
-        Verify feature type is valid
-        '''
-
-        valid_types = FeatureType.types()
-        return self.feature_type in valid_types
-
-    def __validate_value_type(
-        self,
-        value: Any
-    ) -> None:
-        type_map = FeatureType.get_type_map()
-        required = type_map[self.feature_type]
-
-        if not isinstance(value, required):
-            raise InvalidFeatureValueException(
-                value=value,
-                feature_type=self.feature_type)
-
     @staticmethod
     def from_entity(data):
         return Feature(
@@ -124,6 +194,7 @@ class Feature(Serializable):
             name=data.get('name'),
             description=data.get('description'),
             value=data.get('value'),
+            last_evaluated=data.get('last_evaluated'),
             modified_date=data.get('modified_date'),
             created_date=data.get('created_date'))
 

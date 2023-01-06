@@ -1,6 +1,10 @@
+from framework.logger import get_logger
 from quart import abort, request
+
 from providers.feature_provider import FeatureProvider
 from utilities.meta import MetaBlueprint
+
+logger = get_logger(__name__)
 
 feature_bp = MetaBlueprint('feature_bp', __name__)
 

@@ -1,13 +1,19 @@
 from typing import List
+
 from framework.auth.azure import AzureAd
 from framework.auth.configuration import AzureAdConfiguration
+from framework.clients.cache_client import CacheClientAsync
 from framework.configuration.configuration import Configuration
 from framework.di.service_collection import ServiceCollection
 from framework.di.static_provider import ProviderBase
 from motor.motor_asyncio import AsyncIOMotorClient
 
+from clients.event_client import EventClient
+from clients.identity_client import IdentityClient
 from data.feature_repository import FeatureRepository
+from providers.event_provider import EventProvider
 from providers.feature_provider import FeatureProvider
+from services.event_service import EventService
 from services.feature_service import FeatureService
 
 
@@ -15,6 +21,7 @@ class AdRole:
     Read = 'Features.Read'
     Write = 'Features.Write'
     All = 'Features.All'
+    Events = 'Features.Events'
 
 
 def has_role(
@@ -53,6 +60,12 @@ def configure_azure_ad(service_descriptors):
             token_roles=t.get('roles', []),
             required_role=AdRole.Write))
 
+    azure_ad.add_authorization_policy(
+        name='events',
+        func=lambda t: has_role(
+            token_roles=t.get('roles', []),
+            required_role=AdRole.Events))
+
     return azure_ad
 
 
@@ -79,13 +92,19 @@ class ContainerProvider(ProviderBase):
             dependency_type=AsyncIOMotorClient,
             factory=configure_mongo_client)
 
+        service_descriptors.add_singleton(CacheClientAsync)
+        service_descriptors.add_singleton(EventClient)
+        service_descriptors.add_singleton(IdentityClient)
+
         # Repositories
         service_descriptors.add_singleton(FeatureRepository)
 
         # Services
         service_descriptors.add_transient(FeatureService)
+        service_descriptors.add_transient(EventService)
 
         # Providers
         service_descriptors.add_transient(FeatureProvider)
+        service_descriptors.add_transient(EventProvider)
 
         return service_descriptors

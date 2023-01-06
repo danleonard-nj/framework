@@ -1,15 +1,20 @@
+import asyncio
+from datetime import datetime
 from typing import Dict
 
 from domain.rest import CreateFeatureRequest, UpdateFeatureRequest
+from providers.event_provider import EventProvider
 from services.feature_service import FeatureService
 
 
 class FeatureProvider:
     def __init__(
         self,
-        feature_service: FeatureService
+        feature_service: FeatureService,
+        event_provider: EventProvider
     ):
         self.__feature_service = feature_service
+        self.__event_provider = event_provider
 
     async def get_feature_by_id(
         self,
@@ -70,6 +75,10 @@ class FeatureProvider:
     ):
         result = await self.__feature_service.evaluate_feature(
             feature_key=feature_key)
+
+        asyncio.create_task(self.__event_provider.dispatch_feature_evaluated_event(
+            feature_id=result.feature_id,
+            evaluated_date=datetime.now()))
 
         return result.to_dict()
 

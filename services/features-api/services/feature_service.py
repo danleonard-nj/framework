@@ -1,16 +1,17 @@
 from datetime import datetime
-import json
-from typing import Any, Dict, List
+from typing import Any, List
 
 from framework.logger.providers import get_logger
 
 from data.feature_repository import FeatureRepository
-from domain.exceptions import (ArgumentNullException, FeatureExistsException, FeatureKeyConflictException,
-                               FeatureNotFoundException, InvalidFeatureTypeException)
-from domain.feature import Feature, FeatureType, get_cardinality_key
+from domain.exceptions import (ArgumentNullException, FeatureExistsException,
+                               FeatureKeyConflictException,
+                               FeatureNotFoundException,
+                               InvalidFeatureTypeException,
+                               InvalidFeatureValueException)
+from domain.feature import Feature, FeatureType
 from domain.rest import (CreateFeatureRequest, DeleteResponse,
                          EvaluateFeatureResponse, UpdateFeatureRequest)
-from framework.crypto.hashing import sha256
 
 logger = get_logger(__name__)
 
@@ -207,6 +208,20 @@ class FeatureService:
         ArgumentNullException.if_none_or_whitespace(
             'value', update.value)
 
+        # Validate feature provided is known type
+        if not FeatureType.is_known_type(update.feature_type):
+            raise InvalidFeatureTypeException(
+                feature_type=update.feature_type)
+
+        # Validate feature value is valid for feature type
+        if not FeatureType.is_value_valid(
+                feature_Type=update.feature_type,
+                value=update.value):
+
+            raise InvalidFeatureValueException(
+                value=update.value,
+                feature_type=update.feature_type)
+
         entity = await self.__repository.get({
             'feature_id': update.feature_id
         })
@@ -251,10 +266,6 @@ class FeatureService:
         if feature.feature_type != update.feature_type:
             logger.info(f'Feature type update: {update.feature_type}')
 
-            if update.feature_type not in FeatureType.types():
-                raise InvalidFeatureTypeException(
-                    feature_type=update.feature_type)
-
             # Update the feature type
             feature.feature_type = update.feature_type
 
@@ -280,6 +291,14 @@ class FeatureService:
         Create a feature
         '''
 
+        ArgumentNullException.if_none(create_request, 'create_request')
+
+        logger.info(f'Create feature: {create_request.feature_key}')
+
+        self.__validate_feature_type(
+            feature_type=create_request.feature_type,
+            value=create_request.feature_type)
+
         # Feature already exists with given key
         if await self.__repository.feature_key_exists(
                 feature_key=create_request.feature_key):
@@ -290,12 +309,53 @@ class FeatureService:
         feature = Feature.from_create_feature_request(
             create_request=create_request)
 
-        if not feature.is_valid_feature_type():
-            raise InvalidFeatureTypeException(
-                feature_type=feature.feature_type)
+        logger.info(
+            f'Created feature: {feature.feature_key}: {feature.feature_id}')
 
-        logger.info(f"Inserting created feature: '{feature.feature_id}'")
         await self.__repository.insert(
             document=feature.to_dict())
 
         return feature
+
+    async def update_feature_last_evaluated_date(
+        self,
+        feature_id: str,
+        last_evaluated: datetime
+    ) -> Feature:
+        logger.info(f'Feature: {feature_id}: Evaluated: {last_evaluated}')
+
+        ArgumentNullException.if_none_or_whitespace(feature_id, 'feature_id')
+        ArgumentNullException.if_none(last_evaluated, 'evaluated_date')
+
+        feature = await self.get_feature_by_id(
+            feature_id=feature_id)
+
+        # Update the last evaluated date
+        feature.last_evaluated = last_evaluated
+
+        update_result = await self.__repository.replace(
+            selector=feature.get_selector(),
+            document=feature.to_dict())
+
+        logger.info(f'Update result: {update_result.modified_count}')
+
+        return feature
+
+    def __validate_feature_type(
+        self,
+        feature_type: str,
+        value: Any
+    ) -> None:
+        # Validate feature provided is known type
+        if not FeatureType.is_known_type(feature_type):
+            raise InvalidFeatureTypeException(
+                feature_type=feature_type)
+
+        # Validate feature value is valid for feature type
+        if not FeatureType.is_value_valid(
+                feature_Type=feature_type,
+                value=value):
+
+            raise InvalidFeatureValueException(
+                value=value,
+                feature_type=feature_type)
