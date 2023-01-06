@@ -60,6 +60,7 @@ class IdentityClient:
             logger.info(f'{cache_key}: returning cached token')
             return cached_token
 
+        logger.info('Fetching token from AD')
         client_credentials = self.__clients.get(client_name)
 
         if client_credentials is None:
@@ -88,7 +89,7 @@ class IdentityClient:
             'access_token')
 
         await self.__cache_client.set_cache(
-            key=CacheKey.auth_token(client_name),
+            key=cache_key,
             value=token,
             ttl=60)
 

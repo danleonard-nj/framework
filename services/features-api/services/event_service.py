@@ -49,8 +49,6 @@ class EventService:
             endpoint=f'{self.__app_base_url}/api/events/evaluate',
             token=token)
 
-        logger.info(f'Event: {event.to_dict()}')
-
         await self.__event_client.send_message(
             message=event.to_service_bus_message())
 
