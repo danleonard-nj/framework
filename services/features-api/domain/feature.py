@@ -172,7 +172,8 @@ class Feature(Serializable):
         ArgumentNullException.if_none_or_whitespace(
             value, 'value')
 
-        self.__validate_value_type(
+        FeatureType.is_value_valid(
+            feature_type=self.feature_type,
             value=value)
 
         self.value = value
