@@ -12,11 +12,16 @@ class InternalProvider:
     def bind(cls, service_provider):
         if cls.service_provider is None:
             cls.service_provider = service_provider
+        logger.info('Bound service provider to internal provider')
 
     @classmethod
     def resolve(cls, _type):
         return cls.service_provider.resolve(
             _type=_type)
+        
+    @classmethod
+    def get_provider(cls):
+        return cls.service_provider
 
 
 class ProviderBase:
@@ -33,8 +38,10 @@ class ProviderBase:
     @classmethod
     def get_service_provider(cls):
         if cls.service_provider is None:
+            logger.info(f'Configuring base provider services')
             container = cls.configure_container()
 
+            logger.info(f'Building service provider')
             service_provider = ServiceProvider(container)
             service_provider.build()
 
@@ -51,11 +58,13 @@ def get_function_args(func):
     return list(inspect.signature(func).parameters)
 
 
+
 def inject_container_async(func):
     async def wrap(*args, **kwargs):
         func_args = get_function_args(func)
 
-        if 'container' in func_args or 'provider' in func_args:
+        if 'container' in func_args:
+            logger.debug(f'Injecting service provider to view func: {func.__name__}')
             return await func(*args, **kwargs, container=InternalProvider.service_provider)
         return await func(*args, **kwargs)
     return wrap
@@ -65,7 +74,8 @@ def inject_container(func):
     def wrap(*args, **kwargs):
         func_args = get_function_args(func)
 
-        if 'container' in func_args or 'provider' in func_args:
+        if 'container' in func_args:
+            logger.debug(f'Injecting service provider to view func: {func.__name__}')
             return func(*args, **kwargs, container=InternalProvider.service_provider)
         return func(*args, **kwargs)
     return wrap

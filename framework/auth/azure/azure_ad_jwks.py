@@ -6,15 +6,28 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
 from framework.caching import MemoryCache
+from framework.exceptions.nulls import ArgumentNullException
 from framework.logger.providers import get_logger
 from framework.utilities.pinq import first
 
-logger = get_logger(__name__)
+logger = get_logger('framework.autorization')
 
 
 class AzureJwksProvider:
-    def __init__(self, tenant_id):
+    ''' 
+    Provider for JWKS web token signing used 
+    to verify bearer token provieded to the
+    client 
+    '''
+
+    def __init__(
+        self,
+        tenant_id: str
+    ):
         self.__tenant_id = tenant_id
+
+        ArgumentNullException.if_none_or_whitespace(tenant_id, 'tenant_id')
+
         self.__cache = MemoryCache()
 
     def __ensure_bytes(
@@ -27,15 +40,20 @@ class AzureJwksProvider:
 
     def __decode_value(
         self,
-        val
-    ):
+        val: bytes
+    ) -> int:
         decoded = base64.urlsafe_b64decode(self.__ensure_bytes(val) + b'==')
         return int.from_bytes(decoded, 'big')
 
     def __rsa_pem_from_jwk(
         self,
-        jwk
-    ):
+        jwk: str
+    ) -> bytes:
+        '''
+        Decode the PEM data from the token signing keys
+        to use to verify
+        '''
+
         return RSAPublicNumbers(
             n=self.__decode_value(jwk['n']),
             e=self.__decode_value(jwk['e'])
@@ -47,6 +65,9 @@ class AzureJwksProvider:
         self,
         token
     ) -> str:
+        '''
+        Get the KID from the provided token metadata
+        '''
         encoded = token.split('.')[0].encode()
         decoded = base64.b64decode(encoded).decode()
         kid = json.loads(decoded).get('kid')
@@ -76,8 +97,12 @@ class AzureJwksProvider:
 
     def get_jwks_by_token_kid(
         self,
-        token
+        token: str
     ) -> bytes:
+        '''
+        Get the required signigng key tokn tyoe fo
+        a particular tokrn
+        '''
         kid = self.__get_token_kid(
             token=token)
         jwks_keys = self.__get_azure_jwks()

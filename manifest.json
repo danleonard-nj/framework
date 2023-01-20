@@ -1,5 +1,5 @@
 {
-  "version": "0.1.3",
+  "version": "0.2.0",
   "require": [
     "flask",
     "pandas",
@@ -21,7 +21,6 @@
     "azure-servicebus",
     "quart",
     "httpx",
-    "aioredis",
     "motor",
     "deprecated"
   ]

@@ -7,3 +7,21 @@ class UnauthorizedException(Exception):
 class AuthorizationException(Exception):
     def __init__(self, message: str):
         self.message = message
+
+
+class AuthorizationScopeException(Exception):
+    def __init__(self, scope, *args: object) -> None:
+        super().__init__(
+            f"Could not find required scope '{scope}' in the provided access token")
+
+
+class AuthorizationSchemeException(Exception):
+    def __init__(self, scope, *args: object) -> None:
+        super().__init__(
+            f"No authorization scheme with the name '{scope}' is defined")
+
+
+class AuthorizationHeaderException(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(
+            f"No value provided in request authorization header")

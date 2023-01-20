@@ -15,7 +15,7 @@ class Configuration:
         self.__build()
 
     def __get_environment(
-        self
+        selffsb
     ) -> Environment:
         if os.environ.get(Environment.ENV) is None:
             return Environment.PRODUCTION

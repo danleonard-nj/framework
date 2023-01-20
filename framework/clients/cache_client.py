@@ -1,25 +1,21 @@
 import json
 from typing import Iterable, List, Union
 
-import aioredis
-from framework.exceptions.nulls import NullArgumentException
+from redis.asyncio import Redis
+
 from framework.configuration.configuration import Configuration
+from framework.exceptions.nulls import NullArgumentException
 from framework.logger.providers import get_logger
 from framework.serialization.utilities import serialize
 
 logger = get_logger(__name__)
 
 
-class CacheClient:
-    def __init__(self, *args, **kwargs):
-        pass
-
-
 class CacheClientAsync:
     @property
     def client(
         self
-    ) -> aioredis.Redis:
+    ):
         return self.__client
 
     def __init__(
@@ -29,7 +25,7 @@ class CacheClientAsync:
         self.__host = configuration.redis.get('host')
         self.__port = configuration.redis.get('port')
 
-        self.__client = aioredis.Redis(
+        self.__client = Redis(
             host=self.__host,
             port=self.__port)
 
