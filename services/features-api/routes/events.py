@@ -1,4 +1,4 @@
-from framework.rest.blueprints.meta import MetaBlueprint
+from utilities.meta import MetaBlueprint
 from quart import request
 
 from providers.event_provider import EventProvider

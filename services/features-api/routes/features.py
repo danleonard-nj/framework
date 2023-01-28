@@ -1,5 +1,5 @@
 from framework.logger import get_logger
-from quart import abort, request
+from quart import request
 
 from providers.feature_provider import FeatureProvider
 from utilities.meta import MetaBlueprint
