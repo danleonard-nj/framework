@@ -1,6 +1,11 @@
 from typing import Dict, List
 
 
+class Lifetime:
+    Singleton = 'singleton'
+    Transient = 'transient'
+
+
 class ConstructorDependency:
     @property
     def type_name(self):
@@ -31,6 +36,12 @@ class DependencyRegistration:
     def built(self):
         return self.instance is not None
 
+    @property
+    def is_parameterless(
+        self
+    ) -> bool:
+        return len(self.constructor_params) == 0
+
     def __init__(
         self,
         dependency_type,
@@ -50,11 +61,15 @@ class DependencyRegistration:
         self.configure_dependency()
 
     def configure_dependency(self):
-        self.__required_types = [
-            x.dependency_type for x in self.constructor_params]
+        self.__required_types = [dependency.dependency_type for
+                                 dependency in self.constructor_params]
+
         self.__type_name = self.implementation_type.__name__
 
-    def get_activate_constructor_params(self, dependency_lookup: Dict[str, 'DependencyRegistration']):
+    def get_activate_constructor_params(
+        self,
+        dependency_lookup: Dict[str, 'DependencyRegistration']
+    ):
         constructor_params = dict()
 
         for param in self.constructor_params:
@@ -65,20 +80,25 @@ class DependencyRegistration:
 
         return constructor_params
 
-    def activate(self, dependency_lookup):
-        if self.lifetime == 'singleton' and self.built:
+    def activate(
+        self,
+        dependency_lookup
+    ):
+        if self.lifetime == Lifetime.Singleton and self.built:
             return self.instance
 
-        if self.lifetime == 'singleton' and len(self.constructor_params) == 0:
+        if (self.lifetime == Lifetime.Singleton
+                and len(self.constructor_params) == 0):
+
             self.instance = self.implementation_type()
             return self.instance
 
         constructor_params = self.get_activate_constructor_params(
             dependency_lookup=dependency_lookup)
 
-        if self.lifetime == 'singleton':
+        if self.lifetime == Lifetime.Singleton:
             self.instance = self.implementation_type(**constructor_params)
             return self.instance
 
-        if self.lifetime == 'transient':
+        if self.lifetime == Lifetime.Transient:
             return self.implementation_type(**constructor_params)

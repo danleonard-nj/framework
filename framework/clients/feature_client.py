@@ -1,6 +1,7 @@
-from typing import Any, Tuple
+from typing import Any, Dict
 
-import httpx
+from httpx import AsyncClient
+from werkzeug import Response
 
 from framework.configuration.configuration import Configuration
 from framework.exceptions.nulls import ArgumentNullException
@@ -14,21 +15,28 @@ DEFAULT_HEADER_KEY = 'X-Api-Key'
 class FeatureClientAsync:
     def __init__(
         self,
-        configuration: Configuration
+        configuration: Configuration,
+        http_client: AsyncClient
     ):
-        self.__base_url = configuration.features.get('base_url')
-        self.__api_key = configuration.features.get('api_key')
+        ArgumentNullException.if_none(configuration, 'configuration')
+        ArgumentNullException.if_none(http_client, 'http_client')
 
-        self.__enabled = configuration.features.get(
+        self.__base_url = configuration.features.get(
+            'base_url')
+        self.__api_key = configuration.features.get(
+            'api_key')
+
+        self.__feature_client_enabled = configuration.features.get(
             'is_enabled', True)
         self.__header_key = configuration.features.get(
             'header_key', DEFAULT_HEADER_KEY)
 
+        self.__http_client = http_client
         self.__validate_config()
 
     def __validate_config(
         self
-    ):
+    ) -> None:
         ArgumentNullException.if_none_or_whitespace(
             self.__base_url, 'base_url')
         ArgumentNullException.if_none_or_whitespace(
@@ -38,7 +46,7 @@ class FeatureClientAsync:
 
     def __get_headers(
         self
-    ) -> dict:
+    ) -> Dict:
         return {
             self.__header_key: self.__api_key
         }
@@ -46,17 +54,18 @@ class FeatureClientAsync:
     def get_disabled_feature_response(
         self,
         feature_key: str
-    ) -> Tuple[dict, int]:
+    ) -> Response:
         '''
         Get a generic response value indicating
         a disabled featre
-
-        `feature_key`: feature flag key
         '''
 
-        return {
-            'message': f"Feature '{feature_key}' is not enabled"
-        }, 200
+        body = dict(
+            message=f"Feature '{feature_key}' is not enabled")
+
+        return Response(
+            response=body,
+            status=409)
 
     async def is_enabled(
         self,
@@ -64,30 +73,30 @@ class FeatureClientAsync:
     ) -> Any:
         '''
         Get the state of a given feature flag
-
-        `feature_key`: feature flag key
         '''
 
         logger.info(f'Evaluating feature flag: {feature_key}')
 
-        if not self.__enabled:
+        if not self.__feature_client_enabled:
             logger.info(f'Feature evaluation is disabled')
             return True
 
+        # Endpoint to feature key value to fetch
         endpoint = f'{self.__base_url}/api/feature/evaluate/{feature_key}'
-        headers = self.__get_headers()
+        logger.debug(f'Feature endpoint: {endpoint}')
 
-        logger.info(f'Endpoint: {endpoint}')
-        logger.info(f'Headers: {headers}')
+        # Get request headers w/ auth
+        headers = self.__get_headers()
+        logger.debug(f'Headers: {headers}')
 
         try:
-            async with httpx.AsyncClient(timeout=None) as client:
-                response = await client.get(
-                    url=endpoint,
-                    headers=headers)
+            response = await self.__http_client.get(
+                url=endpoint,
+                headers=headers)
 
             content = response.json()
             return content.get('value')
+
         except Exception as ex:
             logger.info(
                 f'Failed to fetch feature flag: {feature_key}: {str(ex)}')

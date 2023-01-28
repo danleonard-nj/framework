@@ -2,9 +2,10 @@
 import uuid
 from datetime import datetime
 
+from quart import Quart
+
 from framework.logger.providers import get_logger
 from framework.serialization import Serializable
-from quart import Quart
 
 logger = get_logger(__name__)
 
@@ -20,6 +21,17 @@ def default(obj):
     return str(obj)
 
 
-def configure_serializer(app: Quart):
+def configure_serializer(
+    app: Quart
+):
+    '''
+    Use framework-default serialization
+    configuration for service responses
+
+    i.e. handle response objects that
+    implement `Serializable` by default
+
+    '''
+
     app.json.default = default
     app.json.sort_keys = False

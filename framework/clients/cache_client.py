@@ -37,10 +37,6 @@ class CacheClientAsync:
     ):
         '''
         Cache a string value at the specified cache key
-
-        `key`: cache key
-        `value`: cache value as `str`
-        `ttl`: Cache time to live in minutes
         '''
 
         NullArgumentException.if_none_or_whitespace(key, 'key')
@@ -67,10 +63,6 @@ class CacheClientAsync:
     ) -> None:
         '''
         Cache a serializable JSON value at the specified cache key
-
-        `key`: cache key
-        `value`: Serializable object to cache
-        `ttl`: Time to live in minutes
         '''
 
         NullArgumentException.if_none_or_whitespace(key, 'key')
@@ -91,8 +83,6 @@ class CacheClientAsync:
         '''
         Fetch a string value from cache and return value or `None` if no
         cached value exists
-
-        `key`: cache key        
         '''
 
         NullArgumentException.if_none_or_whitespace(key, 'key')
@@ -115,8 +105,6 @@ class CacheClientAsync:
         '''
         Fetch a serialized cache value and return the deserialized object
         or `None` if no cached value exists
-
-        `key`: the cache key
         '''
 
         NullArgumentException.if_none_or_whitespace(key, 'key')
@@ -134,8 +122,6 @@ class CacheClientAsync:
     ) -> None:
         '''
         Delete a key from the cache
-
-        `key`: cache key
         '''
 
         NullArgumentException.if_none_or_whitespace(key, 'key')
@@ -149,8 +135,6 @@ class CacheClientAsync:
     ) -> None:
         '''
         Delete a key from the cache
-
-        `key`: cache key
         '''
 
         NullArgumentException.if_none(keys, 'keys')

@@ -9,7 +9,10 @@ class ServiceCollection:
     def __init__(self):
         self.__container = dict()
 
-    def get_type_dependencies(self, _type):
+    def get_type_dependencies(
+        self,
+        _type
+    ):
         params = inspect.signature(_type).parameters
 
         types = []
@@ -24,7 +27,13 @@ class ServiceCollection:
             types.append(constructor_dependency)
         return types
 
-    def add_singleton(self, dependency_type, implementation_type=None, instance=None, factory=None):
+    def add_singleton(
+        self,
+        dependency_type,
+        implementation_type=None,
+        instance=None,
+        factory=None
+    ):
         self.__register_dependency(
             implementation_type=implementation_type,
             dependency_type=dependency_type,
@@ -32,13 +41,22 @@ class ServiceCollection:
             instance=instance,
             factory=factory)
 
-    def add_transient(self, dependency_type, implementation_type=None):
+    def add_transient(
+        self,
+        dependency_type,
+        implementation_type=None
+    ):
         self.__register_dependency(
             implementation_type=implementation_type,
             dependency_type=dependency_type,
             lifetime='transient')
 
-    def __register_dependency(self, implementation_type, dependency_type, **kwargs):
+    def __register_dependency(
+            self,
+            implementation_type,
+            dependency_type,
+            **kwargs
+    ):
         if implementation_type is None:
             implementation_type = dependency_type
 
@@ -58,5 +76,7 @@ class ServiceCollection:
 
         self.__container[dependency_type] = dependency
 
-    def get_container(self) -> Dict[type, DependencyRegistration]:
+    def get_container(
+        self
+    ) -> Dict[type, DependencyRegistration]:
         return self.__container

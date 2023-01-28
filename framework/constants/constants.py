@@ -1,7 +1,5 @@
 from enum import Enum
 
-NONE_LITERAL = 'None'
-
 
 class InclusionType(Enum):
     IncludeAll = 1
@@ -9,9 +7,9 @@ class InclusionType(Enum):
 
 
 class ConfigurationPath:
-    DEVELOPMENT = 'config.dev.json'
-    PRODUCTION = 'config.json'
-    LOCAL = 'config.local.json'
+    Development = 'config.dev.json'
+    Production = 'config.json'
+    Local = 'config.local.json'
 
 
 class Environment:
@@ -40,12 +38,6 @@ class ConfigurationKey:
     SECURITY = 'security'
     API_KEYS = 'keys'
     CERTIFICATE_NAME = 'certificate_name'
-
-
-class AzureCredential:
-    AZURE_CLIENT_ID = 'azure_client_id'
-    AZURE_CLIENT_SECRET = 'azure_client_secret'
-    AZURE_TENANT_ID = 'azure_tenant_id'
 
 
 class Cors:

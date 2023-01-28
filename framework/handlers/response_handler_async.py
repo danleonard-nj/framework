@@ -20,8 +20,7 @@ def error_response(exception: Exception) -> Tuple[dict, int]:
     exception   :   thrown exception
     '''
 
-    logger.exception(
-        f'Invoking error response: {exception.__class__.__name__}')
+    logger.debug('Invoking error response handler')
 
     data = {
         'error': exception.__class__.__name__,
@@ -29,7 +28,7 @@ def error_response(exception: Exception) -> Tuple[dict, int]:
     }
 
     if isinstance(exception, UnauthorizedException):
-        logger.info('Unauthorized')
+        logger.debug('Unauthorized')
         return data, 401
     if isinstance(exception, ExpiredSignatureError):
         logger.info('Token signature is expired')
@@ -41,58 +40,24 @@ def error_response(exception: Exception) -> Tuple[dict, int]:
         return data, 500
 
 
-def status_response(data: dict, status_code: int = 200):
+def __intercept_serializables(
+    result
+):
     '''
-    Generic status code response returned by the handler
-
-    data            :   the respone body
-    status_code     :   the status code
-    '''
-
-    return data, status_code
-
-
-def validate_response(response: Any) -> None:
-    '''
-    Validate the respone is of the right type to avoid an unhandled exception
-    in the response handler.  Often this is raised if the view function returns
-    the standard tuple instead of a dict:
-
-    invalid: {
-        'data' : response
-    }, 200
-
-    response    :   the response body
+    Implicitly serialize objects implementing
+    `Serializable` before creating response
     '''
 
-    if not isinstance(response, [dict, tuple]):
-        raise Exception(
-            f'Invalid response type from view function: {type(response)}')
-
-
-async def handle_response(
-    func: Callable
-) -> Any:
-    try:
-        return await func()
-    except Exception as ex:
-        context = RequestContextProvider.get_request_context()
-        logger.exception(f'Request {context.endpoint} failed: {str(ex)}')
-        return error_response(ex)
-
-
-def __intercept_serializables(result):
     if isinstance(result, Serializable):
-        logger.debug('Intercepted serializable response')
+        logger.debug('Serializing response object implicitly')
         return result.to_dict()
+
     return result
 
 
 def response_handler(func: Callable) -> Callable:
     '''
-    Response handler decorator
-
-    function    :   wrapped view function
+    Framework response handler
     '''
 
     async def wrapper(*args, **kwargs) -> Tuple[dict, int]:
