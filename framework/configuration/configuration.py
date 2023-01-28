@@ -40,13 +40,15 @@ class Configuration:
 
         logger.debug(f'Environment key: {env_key}')
 
-        match env_key.upper():
-            case Environment.DEVELOPMENT.upper():
-                return Environment.DEVELOPMENT
-            case Environment.LOCAL.upper():
-                return Environment.LOCAL
-            case _:
-                return Environment.PRODUCTION
+        logger.debug(f'Environment key: {env_key}')
+
+        if env_key.upper() == Environment.DEVELOPMENT.upper():
+            return Environment.DEVELOPMENT
+
+        if env_key.upper() == Environment.LOCAL.upper():
+            return Environment.LOCAL
+
+        return Environment.PRODUCTION
 
     def __get_configuration_path(
         self
