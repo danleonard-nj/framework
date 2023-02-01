@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
 from framework.caching import MemoryCache
 from framework.exceptions.nulls import ArgumentNullException
 from framework.logger.providers import get_logger
-from framework.utilities.pinq import first
+from framework.utilities.iter_utils import first
 
 logger = get_logger('framework.autorization')
 

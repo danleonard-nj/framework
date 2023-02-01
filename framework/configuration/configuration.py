@@ -35,7 +35,8 @@ class Configuration:
 
         env_key = (
             os.environ.get('FLASK_ENV') or
-            os.environ.get('QUART_ENV')
+            os.environ.get('QUART_ENV') or
+            Environment.PRODUCTION
         )
 
         logger.debug(f'Environment key: {env_key}')
