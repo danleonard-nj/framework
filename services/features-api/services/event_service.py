@@ -1,4 +1,5 @@
 from datetime import datetime
+from threading import Thread
 
 from framework.configuration import Configuration
 from framework.logger import get_logger
@@ -18,12 +19,10 @@ class EventService:
         self,
         configuration: Configuration,
         event_client: EventClient,
-        identity_client: IdentityClient,
-        feature_service: FeatureService
+        identity_client: IdentityClient
     ):
         self.__event_client = event_client
         self.__identity_client = identity_client
-        self.__feature_service = feature_service
 
         self.__app_base_url = configuration.events.get(
             'application_base_url')
@@ -49,14 +48,10 @@ class EventService:
             endpoint=f'{self.__app_base_url}/api/events/evaluate',
             token=token)
 
-        await self.__event_client.send_message(
-            message=event.to_service_bus_message())
+        message = event.to_service_bus_message()
+        event = Thread(
+            target=self.__event_client.send_message,
+            args=(message,))
 
+        event.start()
         logger.info('Event dispatched successfully')
-
-    async def handle_feature_evaluated_event(
-        self,
-        feature_id: str,
-        evaluated_date: datetime
-    ):
-        logger.info(f'Updating feature evaluated date: {feature_id}')
