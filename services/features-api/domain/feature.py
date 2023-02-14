@@ -210,4 +210,5 @@ class Feature(Serializable):
             name=create_request.name,
             description=create_request.description,
             value=create_request.value,
-            created_date=datetime.utcnow())
+            created_date=datetime.utcnow(),
+            last_evaluated=datetime.utcnow())

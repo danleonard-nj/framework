@@ -297,7 +297,7 @@ class FeatureService:
 
         self.__validate_feature_type(
             feature_type=create_request.feature_type,
-            value=create_request.feature_type)
+            value=create_request.value)
 
         # Feature already exists with given key
         if await self.__repository.feature_key_exists(
@@ -353,7 +353,7 @@ class FeatureService:
 
         # Validate feature value is valid for feature type
         if not FeatureType.is_value_valid(
-                feature_Type=feature_type,
+                feature_type=feature_type,
                 value=value):
 
             raise InvalidFeatureValueException(
