@@ -23,3 +23,19 @@ class MetaBlueprint(Blueprint):
                 return await function(*args, **kwargs)
             return wrapper
         return decorator
+
+
+class OpenAuthBlueprint(Blueprint):
+    def __get_endpoint(self, view_function: Callable):
+        return f'__route__{view_function.__name__}'
+
+    def configure(self,  rule: str, methods: List[str]):
+        def decorator(function):
+            @self.route(rule, methods=methods, endpoint=self.__get_endpoint(function))
+            @response_handler
+            @inject_container_async
+            @wraps(function)
+            async def wrapper(*args, **kwargs):
+                return await function(*args, **kwargs)
+            return wrapper
+        return decorator
