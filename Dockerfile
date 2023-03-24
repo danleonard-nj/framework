@@ -1,4 +1,4 @@
-FROM python:3.9-slim-buster AS distro-base
+FROM python:3.11-slim-buster AS distro-base
 WORKDIR /app/framework
 
 RUN apt-get update && apt-get dist-upgrade -y
