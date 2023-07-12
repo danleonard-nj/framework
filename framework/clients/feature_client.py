@@ -75,10 +75,10 @@ class FeatureClientAsync:
         Get the state of a given feature flag
         '''
 
-        logger.info(f'Evaluating feature flag: {feature_key}')
+        logger.debug(f'Evaluating feature flag: {feature_key}')
 
         if not self.__feature_client_enabled:
-            logger.info(f'Feature evaluation is disabled')
+            logger.debug(f'Feature evaluation is disabled')
             return True
 
         # Endpoint to feature key value to fetch
@@ -98,6 +98,6 @@ class FeatureClientAsync:
             return content.get('value')
 
         except Exception as ex:
-            logger.info(
+            logger.exception(
                 f'Failed to fetch feature flag: {feature_key}: {str(ex)}')
             return False

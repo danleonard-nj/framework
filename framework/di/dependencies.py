@@ -75,6 +75,10 @@ class DependencyRegistration:
         for param in self.constructor_params:
             param_dependency = dependency_lookup.get(param.dependency_type)
 
+            if param_dependency is None:
+                raise Exception(
+                    f"Could not find dependency for '{param.dependency_type}' when activating '{self.type_name}' constructor params")
+
             constructor_params[param.name] = param_dependency.activate(
                 dependency_lookup=dependency_lookup)
 
