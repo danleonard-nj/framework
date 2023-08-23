@@ -9,7 +9,6 @@ from clients.identity_client import IdentityClient
 from domain.auth import ClientScope
 from domain.events import UpdateFeatureLastEvaluatedDateEvent
 from domain.rest import FeatureLastEvaluatedRequest
-from services.feature_service import FeatureService
 
 logger = get_logger(__name__)
 
@@ -19,6 +18,7 @@ class EventService:
         self,
         configuration: Configuration,
         event_client: EventClient,
+        identity_client: IdentityClient
         identity_client: IdentityClient
     ):
         self.__event_client = event_client
@@ -48,10 +48,8 @@ class EventService:
             endpoint=f'{self.__app_base_url}/api/events/evaluate',
             token=token)
 
-        message = event.to_service_bus_message()
-        event = Thread(
-            target=self.__event_client.send_message,
-            args=(message,))
+        await self.__event_client.send_message(
+            event.to_service_bus_message())
 
         event.start()
         logger.info('Event dispatched successfully')

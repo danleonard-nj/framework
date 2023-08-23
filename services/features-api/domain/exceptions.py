@@ -41,8 +41,9 @@ class FeatureKeyConflictException(Exception):
 
 class InvalidFeatureTypeException(Exception):
     def __init__(self, feature_type, *args: object) -> None:
+        supported_types = ', '.join(FeatureType.options())
         super().__init__(
-            f"Feature type '{feature_type}' is not a supported feature type")
+            f"Feature type '{feature_type}' is not a supported feature type.")
 
 
 class InvalidFeatureValueException(Exception):

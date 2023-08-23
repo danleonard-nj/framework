@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 from framework.exceptions.nulls import ArgumentNullException
 from framework.serialization import Serializable
@@ -129,7 +129,7 @@ class Feature(Serializable):
         feature_type: str,
         name: str,
         description: str,
-        value: Any,
+        value: Union[int, float, str, bool, Dict],
         last_evaluated: datetime,
         created_date: datetime,
         modified_date: datetime = None,
