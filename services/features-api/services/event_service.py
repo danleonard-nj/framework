@@ -19,7 +19,6 @@ class EventService:
         configuration: Configuration,
         event_client: EventClient,
         identity_client: IdentityClient
-        identity_client: IdentityClient
     ):
         self.__event_client = event_client
         self.__identity_client = identity_client
