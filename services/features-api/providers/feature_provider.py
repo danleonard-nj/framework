@@ -76,9 +76,9 @@ class FeatureProvider:
         result = await self.__feature_service.evaluate_feature(
             feature_key=feature_key)
 
-        asyncio.create_task(self.__event_provider.dispatch_feature_evaluated_event(
-            feature_id=result.feature_id,
-            evaluated_date=datetime.now()))
+        # asyncio.create_task(self.__event_provider.dispatch_feature_evaluated_event(
+        #     feature_id=result.feature_id,
+        #     evaluated_date=datetime.now()))
 
         return result.to_dict()
 
