@@ -71,7 +71,7 @@ def key_authorization(name: str):
                 logger.info(f"No key found on header '{header_key}'")
                 raise UnauthorizedException()
 
-            logger.info(f"Key: {request_api_key}")
+            # logger.info(f"Key: {request_api_key}")
 
             if request_api_key != source_api_key:
                 logger.info(f"Value for key '{request_api_key}' is not valid")
