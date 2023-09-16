@@ -26,7 +26,7 @@ probes:
     liveness: "/api/health/alive"
     readiness: "/api/health/ready"
   initialDelay: 15
-  interval: 10
+  interval: 45
   timeout: 30
   
 serviceAccount:
