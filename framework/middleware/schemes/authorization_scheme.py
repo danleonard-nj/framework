@@ -1,8 +1,6 @@
 from typing import List
-
-from framework.logger.providers import get_logger
 from framework.exceptions.nulls import ArgumentNullException
-from deprecated import deprecated
+from framework.logger.providers import get_logger
 
 logger = get_logger(__name__)
 
@@ -95,6 +93,8 @@ class AuthorizationScheme:
         payload
         '''
 
+        # Loop through the defined claims and verify that the payload contains
+        # the required claims
         for claim in self.validation_parameters.get('claim'):
             claim_type = claim.get('claim_type')
             claim_value = claim.get('claim_value')
@@ -103,10 +103,16 @@ class AuthorizationScheme:
                 f'Scheme: {self.name}: Validating claim: {claim_type}: {claim_value}')
 
             payload_claim = payload.get(claim_type)
+
+            # If the claim is not present in the payload, the authorization
+            # scheme is not valid
             if payload_claim is None:
-                logger.info(f'Validating authorization scheme: Failed')
+                logger.info(
+                    f'Failed to validate authorization scheme: {self.name}')
                 return False
 
+            # If the claim is a list, check if the claim value is present in
+            # the list
             if isinstance(payload_claim, list):
                 if claim_value not in payload_claim:
                     return False

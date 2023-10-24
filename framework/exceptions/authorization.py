@@ -1,3 +1,5 @@
+from deprecated import deprecated
+
 
 class UnauthorizedException(Exception):
     def __init__(self, message='Unauthorized'):
@@ -9,12 +11,14 @@ class AuthorizationException(Exception):
         self.message = message
 
 
+@deprecated
 class AuthorizationScopeException(Exception):
     def __init__(self, scope, *args: object) -> None:
         super().__init__(
             f"Could not find required scope '{scope}' in the provided access token")
 
 
+@deprecated
 class AuthorizationSchemeException(Exception):
     def __init__(self, scope, *args: object) -> None:
         super().__init__(

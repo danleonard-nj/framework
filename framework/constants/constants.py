@@ -1,6 +1,8 @@
 from enum import Enum
+from deprecated import deprecated
 
 
+@deprecated
 class InclusionType(Enum):
     IncludeAll = 1
     IncludeAny = 2
