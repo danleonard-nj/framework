@@ -4,7 +4,7 @@ from typing import Iterable, List, Union
 from redis.asyncio import Redis
 
 from framework.configuration.configuration import Configuration
-from framework.exceptions.nulls import NullArgumentException
+from framework.exceptions.nulls import ArgumentNullException
 from framework.logger.providers import get_logger
 from framework.serialization.utilities import serialize
 
@@ -39,9 +39,9 @@ class CacheClientAsync:
         Cache a string value at the specified cache key
         '''
 
-        NullArgumentException.if_none_or_whitespace(key, 'key')
-        NullArgumentException.if_none_or_whitespace(value, 'value')
-        NullArgumentException.if_none(ttl, 'ttl')
+        ArgumentNullException.if_none_or_whitespace(key, 'key')
+        ArgumentNullException.if_none_or_whitespace(value, 'value')
+        ArgumentNullException.if_none(ttl, 'ttl')
 
         logger.debug(f"Set cache key '{key}' with TTL: {ttl}")
 
@@ -65,9 +65,9 @@ class CacheClientAsync:
         Cache a serializable JSON value at the specified cache key
         '''
 
-        NullArgumentException.if_none_or_whitespace(key, 'key')
-        NullArgumentException.if_none(value, 'value')
-        NullArgumentException.if_none(ttl, 'ttl')
+        ArgumentNullException.if_none_or_whitespace(key, 'key')
+        ArgumentNullException.if_none(value, 'value')
+        ArgumentNullException.if_none(ttl, 'ttl')
 
         logger.debug(f"Set cache key '{key}' with TTL: {ttl}")
 
@@ -85,7 +85,7 @@ class CacheClientAsync:
         cached value exists
         '''
 
-        NullArgumentException.if_none_or_whitespace(key, 'key')
+        ArgumentNullException.if_none_or_whitespace(key, 'key')
 
         logger.debug(f"Get cache value from key '{key}'")
 
@@ -107,7 +107,7 @@ class CacheClientAsync:
         or `None` if no cached value exists
         '''
 
-        NullArgumentException.if_none_or_whitespace(key, 'key')
+        ArgumentNullException.if_none_or_whitespace(key, 'key')
 
         logger.debug(f"Get cache value at key '{key}'")
         value = await self.get_cache(
@@ -124,7 +124,7 @@ class CacheClientAsync:
         Delete a key from the cache
         '''
 
-        NullArgumentException.if_none_or_whitespace(key, 'key')
+        ArgumentNullException.if_none_or_whitespace(key, 'key')
 
         logger.debug(f"Delete cache value with key '{key}'")
         await self.__client.delete(key)
@@ -137,7 +137,7 @@ class CacheClientAsync:
         Delete a key from the cache
         '''
 
-        NullArgumentException.if_none(keys, 'keys')
+        ArgumentNullException.if_none(keys, 'keys')
 
         logger.debug(f"Delete cache values at keys '{keys}'")
         await self.__client.delete(*keys)
