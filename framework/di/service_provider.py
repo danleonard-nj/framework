@@ -126,7 +126,7 @@ class ServiceProvider:
         '''
         Resolves a service for a given type.
         '''
-        logger.debug(f"Resolving service for type: {_type._name_}")
+        logger.debug(f"Resolving service for type: {_type.__name__}")
 
         registration = self._get_registered_dependency(
             implementation_type=_type)
