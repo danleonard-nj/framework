@@ -74,7 +74,7 @@ class ServiceProvider:
         '''
         return len(self.singleton_registrations) + len(self.factory_registrations)
 
-    def _init_(self, service_collection: ServiceCollection):
+    def __init__(self, service_collection: ServiceCollection):
         '''
         Initializes a ServiceProvider instance with a given ServiceCollection.
         '''
