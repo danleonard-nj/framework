@@ -5,7 +5,7 @@ from framework.abstractions.abstract_request import RequestContextProvider
 from framework.configuration import Configuration
 from framework.di.static_provider import InternalProvider
 from framework.exceptions.authorization import UnauthorizedException
-from framework.exceptions.nulls import NullArgumentException
+from framework.exceptions.nulls import ArgumentNullException
 from framework.logger import get_logger
 from framework.validators.nulls import none_or_whitespace
 
@@ -27,7 +27,7 @@ class InvalidApiKeyConfigurationException(Exception):
 def get_key_definitions(
     configuration: Configuration
 ) -> Dict:
-    NullArgumentException.if_none(configuration, 'configuration')
+    ArgumentNullException.if_none(configuration, 'configuration')
 
     api_keys = configuration.auth.get('api_keys', dict())
     return api_keys.get('keys')
@@ -36,7 +36,7 @@ def get_key_definitions(
 def get_header_key(
     configuration: Configuration
 ) -> str:
-    NullArgumentException.if_none(configuration, 'configuration')
+    ArgumentNullException.if_none(configuration, 'configuration')
 
     api_keys = configuration.auth.get('api_keys', dict())
     return api_keys.get('header')

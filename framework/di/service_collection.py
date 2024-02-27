@@ -1,5 +1,5 @@
 import inspect
-from typing import Dict
+from typing import Any, Callable, Dict
 
 from framework.di.dependencies import (ConstructorDependency,
                                        DependencyRegistration)
@@ -7,14 +7,17 @@ from framework.di.dependencies import (ConstructorDependency,
 
 class ServiceCollection:
     def __init__(self):
-        self.__container = dict()
+        self._container = dict()
 
     def get_type_dependencies(
         self,
-        _type
-    ):
+        _type: type
+    ) -> list:
+        # Get the parameters of the constructor of the type
         params = inspect.signature(_type).parameters
 
+        # Create a list of ConstructorDependency objects
+        # for each parameter in the constructor
         types = []
         for name, param in params.items():
             if param.annotation == inspect._empty:
@@ -29,12 +32,12 @@ class ServiceCollection:
 
     def add_singleton(
         self,
-        dependency_type,
-        implementation_type=None,
-        instance=None,
-        factory=None
-    ):
-        self.__register_dependency(
+        dependency_type: type,
+        implementation_type: type = None,
+        instance: Any = None,
+        factory: Callable = None
+    ) -> None:
+        self._register_dependency(
             implementation_type=implementation_type,
             dependency_type=dependency_type,
             lifetime='singleton',
@@ -43,20 +46,22 @@ class ServiceCollection:
 
     def add_transient(
         self,
-        dependency_type,
-        implementation_type=None
-    ):
-        self.__register_dependency(
+        dependency_type: type,
+        implementation_type: type = None
+    ) -> None:
+        self._register_dependency(
             implementation_type=implementation_type,
             dependency_type=dependency_type,
             lifetime='transient')
 
-    def __register_dependency(
+    def _register_dependency(
             self,
             implementation_type,
             dependency_type,
             **kwargs
-    ):
+    ) -> None:
+        # If implementation_type is None, use the dependency type
+        # as the implementation_type
         if implementation_type is None:
             implementation_type = dependency_type
 
@@ -74,9 +79,9 @@ class ServiceCollection:
             constructor_params=constructor_params,
             **kwargs)
 
-        self.__container[dependency_type] = dependency
+        self._container[dependency_type] = dependency
 
     def get_container(
         self
     ) -> Dict[type, DependencyRegistration]:
-        return self.__container
+        return self._container

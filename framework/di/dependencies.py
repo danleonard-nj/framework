@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Any, Callable, Dict, List
 
 
 class Lifetime:
@@ -8,32 +8,48 @@ class Lifetime:
 
 class ConstructorDependency:
     @property
-    def type_name(self):
+    def type_name(
+        self
+    ) -> str:
         self.dependency_type.__name__
 
-    def __init__(self, name, _type):
+    def __init__(
+        self,
+        name: str,
+        _type: type
+    ):
         self.name = name
         self.dependency_type = _type
 
-    def __repr__(self) -> str:
+    def __repr__(
+        self
+    ) -> str:
         return self.dependency_type.__name__
 
 
 class DependencyRegistration:
     @property
-    def type_name(self):
-        return self.__type_name
+    def type_name(
+        self
+    ) -> str:
+        return self._type_name
 
     @property
-    def is_factory(self):
+    def is_factory(
+        self
+    ) -> bool:
         return self.factory is not None
 
     @property
-    def required_types(self):
-        return self.__required_types
+    def required_types(
+        self
+    ) -> bool:
+        return self._required_types
 
     @property
-    def built(self):
+    def built(
+        self
+    ) -> bool:
         return self.instance is not None
 
     @property
@@ -44,11 +60,11 @@ class DependencyRegistration:
 
     def __init__(
         self,
-        dependency_type,
-        lifetime,
-        implementation_type=None,
-        instance=None,
-        factory=None,
+        dependency_type: type,
+        lifetime: str,
+        implementation_type: type = None,
+        instance: Any = None,
+        factory: Callable = None,
         constructor_params: List[ConstructorDependency] = None
     ):
         self.dependency_type = dependency_type
@@ -60,11 +76,13 @@ class DependencyRegistration:
 
         self.configure_dependency()
 
-    def configure_dependency(self):
-        self.__required_types = [dependency.dependency_type for
-                                 dependency in self.constructor_params]
+    def configure_dependency(
+        self
+    ) -> None:
+        self._required_types = [dependency.dependency_type for
+                                dependency in self.constructor_params]
 
-        self.__type_name = self.implementation_type.__name__
+        self._type_name = self.implementation_type.__name__
 
     def get_activate_constructor_params(
         self,
@@ -86,8 +104,8 @@ class DependencyRegistration:
 
     def activate(
         self,
-        dependency_lookup
-    ):
+        dependency_lookup: Dict[type, 'DependencyRegistration']
+    ) -> Any:
         if self.lifetime == Lifetime.Singleton and self.built:
             return self.instance
 

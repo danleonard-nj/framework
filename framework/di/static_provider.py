@@ -1,53 +1,90 @@
-from framework.logger import get_logger
-from framework.di.service_provider import ServiceProvider
 import inspect
+
+from framework.di.service_provider import ServiceProvider
+from framework.logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class InternalProvider:
+    '''
+    A class that provides internal services.
+    '''
     service_provider = None
 
     @classmethod
-    def bind(cls, service_provider):
+    def bind(
+        cls,
+        service_provider
+    ):
+        '''
+        Binds a service provider to the internal provider.
+        '''
         if cls.service_provider is None:
             cls.service_provider = service_provider
         logger.info('Bound service provider to internal provider')
 
     @classmethod
-    def resolve(cls, _type):
-        return cls.service_provider.resolve(
-            _type=_type)
-        
+    def resolve(
+        cls,
+        _type: type
+    ):
+        '''
+        Resolves a service for a given type.
+        '''
+        return cls.service_provider.resolve(_type=_type)
+
     @classmethod
-    def get_provider(cls):
+    def get_provider(
+        cls
+    ):
+        '''
+        Returns the service provider.
+        '''
         return cls.service_provider
 
 
 class ProviderBase:
+    '''
+    A base class for providers.
+    '''
     service_provider = None
 
     @classmethod
-    def initialize_provider(cls):
+    def initialize_provider(
+        cls
+    ):
+        '''
+        Initializes the service provider.
+        '''
         _ = cls.get_service_provider()
 
     @classmethod
-    def configure_container(cls):
+    def configure_container(
+        cls
+    ):
+        '''
+        Configures the container. To be implemented by subclasses.
+        '''
         pass
 
     @classmethod
-    def get_service_provider(cls):
+    def get_service_provider(
+        cls
+    ):
+        '''
+        Returns the service provider, building it if necessary.
+        '''
         if cls.service_provider is None:
-            logger.info(f'Configuring base provider services')
             container = cls.configure_container()
 
-            logger.info(f'Building service provider')
+            # Build the service provider
             service_provider = ServiceProvider(container)
             service_provider.build()
 
             cls.service_provider = service_provider
 
-            # TODO: This replaces the application state
+            # Bind the service provider to the internal provider
             InternalProvider.bind(
                 service_provider=service_provider)
 
@@ -55,27 +92,33 @@ class ProviderBase:
 
 
 def get_function_args(func):
+    '''
+    Returns the arguments of a function.
+    '''
     return list(inspect.signature(func).parameters)
 
 
-
 def inject_container_async(func):
+    '''
+    Asynchronously injects the container into a function if it requires it.
+    '''
     async def wrap(*args, **kwargs):
         func_args = get_function_args(func)
 
         if 'container' in func_args:
-            logger.debug(f'Injecting service provider to view func: {func.__name__}')
             return await func(*args, **kwargs, container=InternalProvider.service_provider)
         return await func(*args, **kwargs)
     return wrap
 
 
 def inject_container(func):
+    '''
+    Injects the container into a function if it requires it.
+    '''
     def wrap(*args, **kwargs):
         func_args = get_function_args(func)
 
         if 'container' in func_args:
-            logger.debug(f'Injecting service provider to view func: {func.__name__}')
             return func(*args, **kwargs, container=InternalProvider.service_provider)
         return func(*args, **kwargs)
     return wrap
