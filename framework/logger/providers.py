@@ -1,9 +1,11 @@
 import logging
-        
+
+LOG_FORMAT = '[%(asctime)-8s] [%(name)s]: [%(levelname)-4s]: [%(funcName)s]: %(message)s'
+
+
 def get_console_handler():
     console = logging.StreamHandler()
-    formatter = logging.Formatter(
-        '[%(asctime)-8s] [%(thread)-4s] [%(name)-12s]: [%(levelname)-4s]: %(message)s')
+    formatter = logging.Formatter(LOG_FORMAT)
     console.setFormatter(formatter)
     return console
 
