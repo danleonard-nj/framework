@@ -1,10 +1,9 @@
-from typing import Dict
 
 
 class AzureAdConfiguration:
     def __init__(
         self,
-        configuration: Dict
+        configuration: dict
     ):
         self.tenant_id = configuration.get('tenant_id')
         self.identity_url = configuration.get('identity_url')

@@ -1,6 +1,4 @@
-import re
-from time import time
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from framework.di.dependencies import DependencyRegistration, Lifetime
 from framework.di.exceptions import (InvalidDependencyChainError,
@@ -23,6 +21,7 @@ class ServiceProvider:
         '''
         Returns a list of types that have been built.
         '''
+
         return self._built_types
 
     @property
@@ -30,6 +29,7 @@ class ServiceProvider:
         '''
         Returns a dictionary mapping built types to their corresponding DependencyRegistration instances.
         '''
+
         return self._built_type_lookup
 
     @property
@@ -37,6 +37,7 @@ class ServiceProvider:
         '''
         Returns a list of DependencyRegistration instances that have been built.
         '''
+
         return self._built_dependencies
 
     @property
@@ -44,6 +45,7 @@ class ServiceProvider:
         '''
         Returns a list of singleton DependencyRegistration instances.
         '''
+
         return self._singletons
 
     @property
@@ -51,6 +53,7 @@ class ServiceProvider:
         '''
         Returns a list of factory DependencyRegistration instances.
         '''
+
         return self._factories
 
     @property
@@ -58,6 +61,7 @@ class ServiceProvider:
         '''
         Returns a list of transient DependencyRegistration instances.
         '''
+
         return self._transients
 
     @property
@@ -65,6 +69,7 @@ class ServiceProvider:
         '''
         Returns a list of transient types.
         '''
+
         return self._transient_types
 
     @property
@@ -72,12 +77,14 @@ class ServiceProvider:
         '''
         Returns the total number of dependencies to instantiate before the provider is considered built.
         '''
+
         return len(self.singleton_registrations) + len(self.factory_registrations)
 
     def __init__(self, service_collection: ServiceCollection):
         '''
         Initializes a ServiceProvider instance with a given ServiceCollection.
         '''
+
         container = service_collection.get_container()
 
         self._dependency_lookup = container
@@ -95,6 +102,7 @@ class ServiceProvider:
         '''
         Initializes the provider by categorizing dependencies into transients, factories, and singletons.
         '''
+
         self._transients = [x for x in self._dependencies
                             if x.lifetime == Lifetime.Transient]
 
@@ -116,6 +124,7 @@ class ServiceProvider:
         '''
         Marks a DependencyRegistration instance as built and updates the built types and dependencies.
         '''
+
         self._built_type_lookup[registration.implementation_type] = registration
         self._built_types.append(registration.implementation_type)
         self._built_dependencies.append(registration)
@@ -126,15 +135,19 @@ class ServiceProvider:
         '''
         Resolves a service for a given type.
         '''
+
         logger.debug(f"Resolving service for type: {_type.__name__}")
 
         registration = self._get_registered_dependency(
             implementation_type=_type)
 
+        # Activate the dependency if it's a transient
+        # with the current dependency lookup
         if registration.lifetime == Lifetime.Transient:
             instance = registration.activate(self._dependency_lookup)
             return instance
 
+        # If it's a singleton simply return the instance
         elif registration.lifetime == Lifetime.Singleton:
             return registration.instance
 
@@ -145,10 +158,16 @@ class ServiceProvider:
         '''
         Verifies that no singleton constructor param dependencies are transients.
         '''
+
+        # Don't allow transient dependencies for singletons (only a single instance
+        # of the transient dependency would be injected during instantiation of the
+        # singleton, which is not the intended behavior of a transient dependency)
         for required_type in registration.required_types:
             required_type_registration = self._get_registered_dependency(
-                implementation_type=required_type, requesting_type=registration)
+                implementation_type=required_type,
+                requesting_type=registration)
 
+            # If the required type is a transient, raise an error
             if required_type_registration.lifetime == Lifetime.Transient:
                 raise TransientDependencyInjectionError(
                     required_type=required_type,
@@ -161,6 +180,7 @@ class ServiceProvider:
         '''
         Checks if a type can be built.
         '''
+
         if registration.lifetime == Lifetime.Singleton:
             return self._can_build_singleton_type(registration=registration)
 
@@ -171,6 +191,7 @@ class ServiceProvider:
         '''
         Checks if a singleton type can be built.
         '''
+
         self._verify_singleton(registration=registration)
 
         for required_type in registration.required_types:
@@ -187,6 +208,7 @@ class ServiceProvider:
         '''
         Returns the DependencyRegistration instance for a given implementation type.
         '''
+
         registration = self._dependency_lookup.get(implementation_type)
 
         if registration is not None:
@@ -204,6 +226,7 @@ class ServiceProvider:
         '''
         Builds the service provider by creating instances of all dependencies registered as singleton or factories.
         '''
+
         while len(self.built_dependencies) < self.to_instantiate:
             cycle_start = len(self.built_dependencies)
             self._build_singletons()
@@ -234,11 +257,14 @@ class ServiceProvider:
 
         for registration in unbuilt_singletons:
 
+            # No parameters
             if registration.is_parameterless:
                 registration.activate(self._dependency_lookup)
                 self._set_built_dependency(registration=registration)
 
-            elif self._can_build_type(registration=registration):
+            # Has parameters / dependencies
+            elif self._can_build_singleton_type(registration=registration):
+
                 registration.activate(self._dependency_lookup)
                 self._set_built_dependency(registration=registration)
 
@@ -252,6 +278,9 @@ class ServiceProvider:
                              if not registration.built]
 
         for registration in unbuilt_factories:
+
+            # This is where we'll pass the provider into the
+            # factory function to allow for nested dependencies
             factory_instance = registration.factory(self)
             registration.instance = factory_instance
 

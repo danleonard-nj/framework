@@ -1,7 +1,6 @@
-from typing import List, Union
+from typing import List
 
 import jwt
-
 from framework.auth.azure import AzureJwksProvider
 from framework.exceptions.nulls import ArgumentNullException
 from framework.logger.providers import get_logger
@@ -22,13 +21,13 @@ class AzureAdJwt(AzureJwksProvider):
 
         super().__init__(tenant_id)
 
-        self.__audiences = audiences
-        self.__issuer = issuer
+        self._audiences = audiences
+        self._issuer = issuer
 
     def verify_token_signing_and_decode(
         self,
-        token
-    ) -> Union[dict, None]:
+        token: str
+    ) -> dict | None:
         ''' 
         Validate that the provided JWT bearer token
         has a valid signature and return the decoded
@@ -38,8 +37,8 @@ class AzureAdJwt(AzureJwksProvider):
         public_key = self.get_jwks_by_token_kid(
             token=token)
 
-        logger.debug(f'Valid issuer: {self.__issuer}')
-        logger.debug(f'Valid audiences: {self.__audiences}')
+        logger.debug(f'Valid issuer: {self._issuer}')
+        logger.debug(f'Valid audiences: {self._audiences}')
 
         # Verify and decode the token
         decoded = jwt.decode(
@@ -47,7 +46,7 @@ class AzureAdJwt(AzureJwksProvider):
             key=public_key,
             verify=True,
             algorithms=['RS256'],
-            audience=self.__audiences,
-            issuer=self.__issuer)
+            audience=self._audiences,
+            issuer=self._issuer)
 
         return decoded

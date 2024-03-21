@@ -16,8 +16,8 @@ class AzureAd:
         audiences: str,
         issuer: str
     ):
-        self.__authorization_schemes = dict()
-        self.__jwt_handler = AzureAdJwt(
+        self._authorization_schemes = dict()
+        self._jwt_handler = AzureAdJwt(
             tenant_id=tenant,
             audiences=audiences,
             issuer=issuer)
@@ -28,16 +28,19 @@ class AzureAd:
             scheme: Any):
         '''
         Validate a service access token
+
+        `token`: The access token to validate
+        `scheme`: The name of the authorization scheme to validate
         '''
 
         ArgumentNullException.if_none_or_empty(scheme, 'scheme')
         ArgumentNullException.if_none_or_empty(token, 'token')
 
-        payload = self.__validate_access_token_signature(
+        payload = self._validate_access_token_signature(
             token=token)
 
         logger.debug(f'Validating authorization scheme: {scheme}')
-        if not self.__validate_authorization(
+        if not self._validate_authorization(
                 payload=payload,
                 scheme=scheme):
 
@@ -51,28 +54,41 @@ class AzureAd:
         func: Callable
     ):
         '''
-        Define an authorization policy function
+        Define an authorization policy function.  The function
+        takes a single parameter, the decoded access token payload.
+
+        `name`: name of the authorization policy
+        `func`: the authorization policy function
         '''
 
-        self.__authorization_schemes[name] = func
+        self._authorization_schemes[name] = func
 
-    def __validate_access_token_signature(
+    def _validate_access_token_signature(
         self,
         token: str
     ):
         '''
         Validate the access token signature
+
+        `token`: the access token to validate
         '''
 
-        return self.__jwt_handler.verify_token_signing_and_decode(
+        return self._jwt_handler.verify_token_signing_and_decode(
             token=token)
 
-    def __validate_authorization(
+    def _validate_authorization(
         self,
         scheme: str,
         payload: Dict
     ):
-        auth_func = self.__authorization_schemes.get(scheme)
+        '''
+        Validate the authorization scheme
+
+        `scheme`: name of authorization scheme to validate
+        `payload`: decoded access token payload
+        '''
+
+        auth_func = self._authorization_schemes.get(scheme)
 
         if not auth_func:
             raise AuthorizationException(

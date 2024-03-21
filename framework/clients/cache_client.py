@@ -1,12 +1,11 @@
 import json
 from typing import Iterable, List, Union
 
-from redis.asyncio import Redis
-
 from framework.configuration.configuration import Configuration
 from framework.exceptions.nulls import ArgumentNullException
 from framework.logger.providers import get_logger
 from framework.serialization.utilities import serialize
+from redis.asyncio import Redis
 
 logger = get_logger(__name__)
 
@@ -16,18 +15,18 @@ class CacheClientAsync:
     def client(
         self
     ):
-        return self.__client
+        return self._client
 
     def __init__(
         self,
         configuration: Configuration
     ):
-        self.__host = configuration.redis.get('host')
-        self.__port = configuration.redis.get('port')
+        self._host = configuration.redis.get('host')
+        self._port = configuration.redis.get('port')
 
-        self.__client = Redis(
-            host=self.__host,
-            port=self.__port)
+        self._client = Redis(
+            host=self._host,
+            port=self._port)
 
     async def set_cache(
         self,
@@ -37,6 +36,10 @@ class CacheClientAsync:
     ):
         '''
         Cache a string value at the specified cache key
+
+        `key`: The key to cache the value at
+        `value`: The value to cache
+        `ttl`: The time-to-live for the cached value (in minutes)
         '''
 
         ArgumentNullException.if_none_or_whitespace(key, 'key')
@@ -46,7 +49,7 @@ class CacheClientAsync:
         logger.debug(f"Set cache key '{key}' with TTL: {ttl}")
 
         try:
-            await self.__client.set(
+            await self._client.set(
                 name=key,
                 value=value,
                 ex=(ttl * 60))
@@ -63,6 +66,10 @@ class CacheClientAsync:
     ) -> None:
         '''
         Cache a serializable JSON value at the specified cache key
+
+        `key`: The key to cache the value at
+        `value`: The value to cache
+        `ttl`: The time-to-live for the cached value (in minutes)
         '''
 
         ArgumentNullException.if_none_or_whitespace(key, 'key')
@@ -83,6 +90,8 @@ class CacheClientAsync:
         '''
         Fetch a string value from cache and return value or `None` if no
         cached value exists
+
+        `key`: The key to fetch from cache
         '''
 
         ArgumentNullException.if_none_or_whitespace(key, 'key')
@@ -90,7 +99,7 @@ class CacheClientAsync:
         logger.debug(f"Get cache value from key '{key}'")
 
         try:
-            value = await self.__client.get(name=key)
+            value = await self._client.get(name=key)
             if value is not None:
                 return value.decode()
 
@@ -105,6 +114,8 @@ class CacheClientAsync:
         '''
         Fetch a serialized cache value and return the deserialized object
         or `None` if no cached value exists
+
+        `key`: The key to fetch from cache
         '''
 
         ArgumentNullException.if_none_or_whitespace(key, 'key')
@@ -122,12 +133,14 @@ class CacheClientAsync:
     ) -> None:
         '''
         Delete a key from the cache
+
+        `key`: The key to delete
         '''
 
         ArgumentNullException.if_none_or_whitespace(key, 'key')
 
         logger.debug(f"Delete cache value with key '{key}'")
-        await self.__client.delete(key)
+        await self._client.delete(key)
 
     async def delete_keys(
         self,
@@ -135,9 +148,11 @@ class CacheClientAsync:
     ) -> None:
         '''
         Delete a key from the cache
+
+        `keys`: A list of keys to delete
         '''
 
         ArgumentNullException.if_none(keys, 'keys')
 
         logger.debug(f"Delete cache values at keys '{keys}'")
-        await self.__client.delete(*keys)
+        await self._client.delete(*keys)

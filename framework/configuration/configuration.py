@@ -1,6 +1,5 @@
 import json
 import os
-from typing import Dict
 
 from framework.auth.configuration import AzureAdConfiguration
 from framework.constants.constants import ConfigurationPath, Environment
@@ -15,22 +14,30 @@ class Configuration:
     def environment(
         self
     ) -> str:
-        return self.__environment_name
+        '''
+        Returns the name of the environment.
+        '''
+
+        return self._environment_name
 
     @property
     def values(
         self
-    ) -> Dict:
-        return self.__json
+    ) -> dict:
+        '''
+        Returns the dictionary containing the raw configuration values.
+        '''
+
+        return self._json
 
     def __init__(
         self
     ):
-        self.__environment_name = self.__get_environment()
-        self.__build_configuration()
+        self._environment_name = self._get_environment()
+        self._build_configuration()
 
-    def __get_environment(
-        selffsb
+    def _get_environment(
+        self
     ) -> Environment:
 
         env_key = (
@@ -38,10 +45,6 @@ class Configuration:
             os.environ.get('QUART_ENV') or
             Environment.PRODUCTION
         )
-
-        logger.debug(f'Environment key: {env_key}')
-
-        logger.debug(f'Environment key: {env_key}')
 
         if env_key.upper() == Environment.DEVELOPMENT.upper():
             return Environment.DEVELOPMENT
@@ -51,14 +54,14 @@ class Configuration:
 
         return Environment.PRODUCTION
 
-    def __get_configuration_path(
+    def _get_configuration_path(
         self
     ) -> str:
         '''
         Get the configuration path by environment
         '''
 
-        match self.__environment_name:
+        match self._environment_name:
             case Environment.DEVELOPMENT:
                 return ConfigurationPath.Development
             case Environment.PRODUCTION:
@@ -67,25 +70,25 @@ class Configuration:
                 return ConfigurationPath.Local
             case _:
                 raise ConfigurationSourceException(
-                    environment=self.__environment_name)
+                    environment=self._environment_name)
 
-    def __build_configuration(
+    def _build_configuration(
         self
     ) -> None:
         '''
         Build the configuration object
         '''
 
-        config_path = self.__get_configuration_path()
+        config_path = self._get_configuration_path()
         logger.debug(f'Configuration path: {config_path}')
 
         # if not Path(config_path).is_file():
         #     config_path = ConfigurationPath.PRODUCTION
 
         with open(f'./{config_path}', 'r') as file:
-            self.__json = json.loads(file.read())
+            self._json = json.loads(file.read())
 
-        self.__dict__.update(self.__json)
+        self.__dict__.update(self._json)
 
         if 'auth' in self.__dict__:
             self.ad_auth = AzureAdConfiguration(

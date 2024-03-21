@@ -5,13 +5,17 @@ import requests
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
-
 from framework.caching import MemoryCache
 from framework.exceptions.nulls import ArgumentNullException
 from framework.logger.providers import get_logger
 from framework.utilities.iter_utils import first
 
 logger = get_logger('framework.autorization')
+
+
+class AzureJwksKeyException(Exception):
+    def __init__(self, message):
+        super().__init__(message)
 
 
 class AzureJwksProvider:
@@ -25,13 +29,12 @@ class AzureJwksProvider:
         self,
         tenant_id: str
     ):
-        self.__tenant_id = tenant_id
+        self._tenant_id = tenant_id
+        self._cache = MemoryCache()
 
         ArgumentNullException.if_none_or_whitespace(tenant_id, 'tenant_id')
 
-        self.__cache = MemoryCache()
-
-    def __ensure_bytes(
+    def _ensure_bytes(
         self,
         key
     ):
@@ -39,14 +42,14 @@ class AzureJwksProvider:
             key = key.encode('utf-8')
         return key
 
-    def __decode_value(
+    def _decode_value(
         self,
         val: bytes
     ) -> int:
-        decoded = base64.urlsafe_b64decode(self.__ensure_bytes(val) + b'==')
+        decoded = base64.urlsafe_b64decode(self._ensure_bytes(val) + b'==')
         return int.from_bytes(decoded, 'big')
 
-    def __rsa_pem_from_jwk(
+    def _rsa_pem_from_jwk(
         self,
         jwk: str
     ) -> bytes:
@@ -56,13 +59,13 @@ class AzureJwksProvider:
         '''
 
         return RSAPublicNumbers(
-            n=self.__decode_value(jwk['n']),
-            e=self.__decode_value(jwk['e'])
+            n=self._decode_value(jwk['n']),
+            e=self._decode_value(jwk['e'])
         ).public_key(default_backend()).public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo)
 
-    def __get_token_kid(
+    def _get_token_kid(
         self,
         token
     ) -> str:
@@ -74,22 +77,22 @@ class AzureJwksProvider:
         kid = json.loads(decoded).get('kid')
         return kid
 
-    def __get_azure_jwks(
+    def _get_azure_jwks(
         self
     ):
-        cached = self.__cache.get(
+        cached = self._cache.get(
             key=f'{self.__class__.__name__}-jwks-discovery')
 
         if cached is not None:
             return cached
 
         response = requests.get(
-            url=f'https://login.microsoftonline.com/{self.__tenant_id}/discovery/v2.0/keys')
+            url=f'https://login.microsoftonline.com/{self._tenant_id}/discovery/v2.0/keys')
 
         data = response.json()
         keys = data.get('keys')
 
-        self.__cache.set(
+        self._cache.set(
             key=f'{self.__class__.__name__}-jwks-discovery',
             value=keys,
             ttl=60 * 60 * 24)
@@ -104,17 +107,18 @@ class AzureJwksProvider:
         Get the required signigng key tokn tyoe fo
         a particular tokrn
         '''
-        kid = self.__get_token_kid(
+        kid = self._get_token_kid(
             token=token)
-        jwks_keys = self.__get_azure_jwks()
+        jwks_keys = self._get_azure_jwks()
 
         key = first(
             items=jwks_keys,
             func=lambda x: x.get('kid') == kid)
 
         if key is None:
-            raise Exception(f"No key set exists for key with the ID '{kid}'")
+            raise AzureJwksKeyException(
+                f"No key set exists for key with the ID '{kid}'")
 
-        rsa_pem = self.__rsa_pem_from_jwk(
+        rsa_pem = self._rsa_pem_from_jwk(
             jwk=key)
         return rsa_pem
