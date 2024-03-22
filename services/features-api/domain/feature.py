@@ -2,12 +2,11 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Union
 
-from framework.exceptions.nulls import ArgumentNullException
-from framework.serialization import Serializable
-
 from domain.exceptions import (InvalidFeatureTypeException,
                                InvalidFeatureValueException)
 from domain.rest import CreateFeatureRequest
+from framework.exceptions.nulls import ArgumentNullException
+from framework.serialization import Serializable
 from utilities.cardinality import get_cardinality_key
 
 

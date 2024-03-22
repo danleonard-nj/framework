@@ -1,14 +1,12 @@
 from datetime import datetime
-from threading import Thread
-
-from framework.configuration import Configuration
-from framework.logger import get_logger
 
 from clients.event_client import EventClient
 from clients.identity_client import IdentityClient
 from domain.auth import ClientScope
 from domain.events import UpdateFeatureLastEvaluatedDateEvent
 from domain.rest import FeatureLastEvaluatedRequest
+from framework.configuration import Configuration
+from framework.logger import get_logger
 
 logger = get_logger(__name__)
 

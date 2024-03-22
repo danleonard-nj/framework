@@ -1,8 +1,6 @@
 from datetime import datetime
 from typing import Any, List
 
-from framework.logger.providers import get_logger
-
 from data.feature_repository import FeatureRepository
 from domain.exceptions import (ArgumentNullException, FeatureExistsException,
                                FeatureKeyConflictException,
@@ -12,6 +10,7 @@ from domain.exceptions import (ArgumentNullException, FeatureExistsException,
 from domain.feature import Feature, FeatureType
 from domain.rest import (CreateFeatureRequest, DeleteResponse,
                          EvaluateFeatureResponse, UpdateFeatureRequest)
+from framework.logger.providers import get_logger
 
 logger = get_logger(__name__)
 

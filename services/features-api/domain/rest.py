@@ -1,11 +1,10 @@
 from datetime import datetime
-from typing import Any, Dict
+from typing import Dict
 
 from dateutil import parser
+from domain.exceptions import DateTimeParsingException
 from framework.exceptions.nulls import ArgumentNullException
 from framework.serialization import Serializable
-
-from domain.exceptions import DateTimeParsingException
 from utilities.cardinality import get_cardinality_key
 
 

@@ -1,5 +1,8 @@
 from typing import List
 
+from clients.event_client import EventClient
+from clients.identity_client import IdentityClient
+from data.feature_repository import FeatureRepository
 from framework.auth.azure import AzureAd
 from framework.auth.configuration import AzureAdConfiguration
 from framework.clients.cache_client import CacheClientAsync
@@ -7,10 +10,6 @@ from framework.configuration.configuration import Configuration
 from framework.di.service_collection import ServiceCollection
 from framework.di.static_provider import ProviderBase
 from motor.motor_asyncio import AsyncIOMotorClient
-
-from clients.event_client import EventClient
-from clients.identity_client import IdentityClient
-from data.feature_repository import FeatureRepository
 from providers.event_provider import EventProvider
 from providers.feature_provider import FeatureProvider
 from services.event_service import EventService

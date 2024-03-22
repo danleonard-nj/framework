@@ -1,12 +1,11 @@
 from functools import wraps
 from typing import Callable, List
 
+from domain.exceptions import ArgumentNullException
 from framework.auth.wrappers.azure_ad_wrappers import azure_ad_authorization
 from framework.di.static_provider import inject_container_async
 from framework.handlers.response_handler_async import response_handler
 from quart import Blueprint
-
-from domain.exceptions import ArgumentNullException
 from utilities.api_key import key_authorization
 
 
