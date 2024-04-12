@@ -2,6 +2,16 @@ import asyncio
 from typing import Any
 
 
+def fire_task(coro) -> asyncio.Task:
+    '''
+    Fire a coroutine task.
+
+    `coro`: The coroutine task to be fired.
+    '''
+
+    return asyncio.create_task(coro)
+
+
 class TaskCollection:
     def __init__(
         self,

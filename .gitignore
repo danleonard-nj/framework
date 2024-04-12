@@ -190,7 +190,6 @@ images/pybase/framework/framework/utilities/url_utils.py
 images/pybase/framework/framework/validators/__init__.py
 images/pybase/framework/framework/validators/nulls.py
 
-
 key
 config.json
 config.dev.json
@@ -200,3 +199,12 @@ git-*
 *Dockerfile
 **/__pycache__
 **/.vscode
+framework/.VSCodeCounter/2024-03-23_22-46-13/details.md
+framework/.VSCodeCounter/2024-03-23_22-46-13/diff-details.md
+framework/.VSCodeCounter/2024-03-23_22-46-13/diff.csv
+framework/.VSCodeCounter/2024-03-23_22-46-13/diff.md
+framework/.VSCodeCounter/2024-03-23_22-46-13/diff.txt
+framework/.VSCodeCounter/2024-03-23_22-46-13/results.csv
+framework/.VSCodeCounter/2024-03-23_22-46-13/results.json
+framework/.VSCodeCounter/2024-03-23_22-46-13/results.md
+framework/.VSCodeCounter/2024-03-23_22-46-13/results.txt

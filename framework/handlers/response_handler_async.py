@@ -1,17 +1,19 @@
-from typing import Any, Callable, Tuple
+from typing import Callable, Tuple
 
+from deprecated import deprecated
 from framework.abstractions.abstract_request import RequestContextProvider
 from framework.exceptions.authorization import UnauthorizedException
+from framework.exceptions.rest import HttpException
 from framework.handlers.context import preserve_source_context
 from framework.logger.providers import get_logger
+from framework.serialization import Serializable
 from framework.utilities.object_utils import getattr_or_none
 from jwt.exceptions import ExpiredSignatureError
-from framework.serialization import Serializable
 
 logger = get_logger(__name__)
 
 
-def error_response(exception: Exception) -> Tuple[dict, int]:
+def _get_error_response(exception: Exception) -> Tuple[dict, int]:
     '''
     Return a response indicating an exception.  This is called any time
     an exception is thrown in the view method when it's wrapped by the
@@ -20,27 +22,21 @@ def error_response(exception: Exception) -> Tuple[dict, int]:
     exception   :   thrown exception
     '''
 
-    logger.debug('Invoking error response handler')
-
     data = {
         'error': exception.__class__.__name__,
         'message': str(exception),
     }
 
-    if isinstance(exception, UnauthorizedException):
-        logger.debug('Unauthorized')
+    if isinstance(exception, HttpException):
+        return data, exception.status_code
+
+    if isinstance(exception, (UnauthorizedException, ExpiredSignatureError)):
         return data, 401
-    if isinstance(exception, ExpiredSignatureError):
-        logger.info('Token signature is expired')
-        return data, 401
-    else:
-        # Don't return the traceback in the error response in production
-        # if environment == Environment.Development:
-        #     data['traceback'] = traceback.format_exc().split('\n')
-        return data, 500
+
+    return data, 500
 
 
-def __intercept_serializables(
+def _intercept_serializables(
     result
 ):
     '''
@@ -61,7 +57,6 @@ def response_handler(func: Callable) -> Callable:
     '''
 
     async def wrapper(*args, **kwargs) -> Tuple[dict, int]:
-        logger.debug('Response handler invoked')
         preserve_source_context(func=func)
 
         try:
@@ -69,16 +64,17 @@ def response_handler(func: Callable) -> Callable:
 
             # Intercept responses that implement
             # Serializable and call to_dict()
-            return __intercept_serializables(
+            return _intercept_serializables(
                 result=result)
 
         except Exception as ex:
             context = RequestContextProvider.get_request_context()
             logger.exception(f'Request {context.endpoint} failed: {str(ex)}')
-            return error_response(ex)
+            return _get_error_response(ex)
     return wrapper
 
 
+@deprecated
 def error_handler(e):
     message = {'error': str(e)}
     return message, getattr_or_none(
