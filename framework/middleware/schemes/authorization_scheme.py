@@ -1,10 +1,13 @@
 from typing import List
+
+from deprecated import deprecated
 from framework.exceptions.nulls import ArgumentNullException
 from framework.logger.providers import get_logger
 
 logger = get_logger(__name__)
 
 
+@deprecated
 class AuthClaim:
     @property
     def claim_type(
@@ -27,6 +30,7 @@ class AuthClaim:
         self.__claim_value = claim_value
 
 
+@deprecated
 class AuthorizationScheme:
     def __init__(
         self,

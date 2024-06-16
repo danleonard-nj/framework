@@ -14,10 +14,12 @@ from framework.middleware.schemes.authorization_scheme import \
 from framework.utilities import pinq
 from framework.utilities.pinq import first
 from framework.validators.nulls import not_none
+from deprecated import deprecated
 
 logger = get_logger(__name__)
 
 
+@deprecated
 class AuthMiddleware:
     def __init__(self, public_key, algorithm='RS256'):
         self.__configuration = InternalProvider.resolve(Configuration)

@@ -12,9 +12,12 @@ from framework.validators.nulls import not_none
 
 from framework.dependency_injection.container import Container
 
+from deprecated import deprecated
+
 logger = get_logger(__name__)
 
 
+@deprecated
 def authorization(scheme: Union[List[str], str], inclusion_type: Union[InclusionType, None] = None) -> Callable:
     '''
     Authorization scheme decorator
@@ -41,6 +44,7 @@ def authorization(scheme: Union[List[str], str], inclusion_type: Union[Inclusion
     return real_decorator
 
 
+@deprecated
 def api_key(name: str):
     def real_decorator(function):
         @wraps(function)
