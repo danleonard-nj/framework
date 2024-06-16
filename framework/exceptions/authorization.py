@@ -1,14 +1,15 @@
 from deprecated import deprecated
+from framework.exceptions.rest import HttpException
 
 
-class UnauthorizedException(Exception):
+class UnauthorizedException(HttpException):
     def __init__(self, message='Unauthorized'):
-        self.message = message
+        super().__init__(message, 401)
 
 
-class AuthorizationException(Exception):
+class AuthorizationException(HttpException):
     def __init__(self, message: str):
-        self.message = message
+        super().__init__(message, 401)
 
 
 @deprecated
@@ -25,6 +26,7 @@ class AuthorizationSchemeException(Exception):
             f"No authorization scheme with the name '{scope}' is defined")
 
 
+@deprecated
 class AuthorizationHeaderException(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(
