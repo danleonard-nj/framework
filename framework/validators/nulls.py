@@ -8,4 +8,10 @@ def not_none(value, name):
 
 
 def none_or_whitespace(value):
-    return value is None or value == ''
+    if value is None:
+        return True
+
+    if isinstance(value, str):
+        return value.strip() == ''
+
+    return False

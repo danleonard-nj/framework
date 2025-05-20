@@ -1,7 +1,9 @@
 
+from deprecated import deprecated
 from middleware.schemes.authorization_scheme import AuthorizationScheme
 
 
+@deprecated
 class SchemeCollection:
     def __init__(self):
         self._schemes = []
