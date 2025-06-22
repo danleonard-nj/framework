@@ -1,6 +1,7 @@
 from typing import Callable, Tuple
 
 from deprecated import deprecated
+from pydantic import BaseModel
 from framework.abstractions.abstract_request import RequestContextProvider
 from framework.exceptions.authorization import UnauthorizedException
 from framework.exceptions.rest import HttpException
@@ -45,8 +46,12 @@ def _intercept_serializables(
     '''
 
     if isinstance(result, Serializable):
-        logger.debug('Serializing response object implicitly')
+        logger.debug('Serializing Serializable object response implicitly')
         return result.to_dict()
+
+    if isinstance(result, BaseModel):
+        logger.debug('Serializing Pydantic object response implicitly')
+        return result.model_dump()
 
     return result
 

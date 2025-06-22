@@ -21,3 +21,4 @@ quart
 httpx
 aioredis
 motor
+pydantic

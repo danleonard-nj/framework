@@ -1,4 +1,5 @@
 import inspect
+import threading
 from framework.di.service_provider import ServiceProvider
 from framework.logger import get_logger
 
@@ -71,6 +72,7 @@ class ProviderBase:
     Base class for providers.
     """
     service_provider = None
+    _lock = threading.Lock()
 
     @classmethod
     def initialize_provider(cls):
@@ -91,15 +93,18 @@ class ProviderBase:
     def get_service_provider(cls):
         """
         Returns the service provider, building it if necessary.
+        Thread-safe implementation.
         """
         if cls.service_provider is None:
-            container = cls.configure_container()
-            # Build the service provider (which will prebuild singleton/factory dependencies)
-            service_provider = ServiceProvider(container)
-            service_provider.build()
-            cls.service_provider = service_provider
-            # Bind the root provider to the internal provider.
-            InternalProvider.bind(service_provider=service_provider)
+            with cls._lock:
+                if cls.service_provider is None:
+                    container = cls.configure_container()
+                    # Build the service provider (which will prebuild singleton/factory dependencies)
+                    service_provider = ServiceProvider(container)
+                    service_provider.build()
+                    cls.service_provider = service_provider
+                    # Bind the root provider to the internal provider.
+                    InternalProvider.bind(service_provider=service_provider)
         return cls.service_provider
 
 
