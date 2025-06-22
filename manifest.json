@@ -1,5 +1,5 @@
 {
-  "version": "0.5.1",
+  "version": "5.0.1",
   "require": [
     "Werkzeug==2.2.2",
     "flask",
