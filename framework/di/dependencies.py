@@ -1,12 +1,16 @@
-from typing import Any, Callable
+import asyncio
+from typing import Any, Callable, Optional
 
 
 class Lifetime:
     Singleton = 'singleton'
     Transient = 'transient'
+    Scoped = 'scoped'
 
 
 class ConstructorDependency:
+    __slots__ = ('name', 'dependency_type')
+
     @property
     def type_name(self) -> str:
         '''
@@ -41,6 +45,11 @@ class ConstructorDependency:
 
 
 class DependencyRegistration:
+    __slots__ = (
+        'dependency_type', 'lifetime', 'implementation_type', 'instance',
+        'factory', 'eager', 'constructor_params', '_type_name', '_required_types', '_resolver_fn'
+    )
+
     @property
     def type_name(self) -> str:
         '''
@@ -88,6 +97,7 @@ class DependencyRegistration:
         implementation_type: type = None,
         instance: Any = None,
         factory: Callable = None,
+        eager: bool = False,
         constructor_params: list[ConstructorDependency] = None
     ):
         '''
@@ -98,6 +108,8 @@ class DependencyRegistration:
         `implementation_type`: The implementation type of the dependency.
         `instance`: The instance of the dependency.
         `factory`: The factory method of the dependency.
+        `eager`: Whether a singleton should be constructed at build() time
+            instead of lazily on first resolve().
         `constructor_params`: The constructor parameters of the dependency.
         '''
 
@@ -106,7 +118,9 @@ class DependencyRegistration:
         self.implementation_type = implementation_type or dependency_type
         self.instance = instance
         self.factory = factory
+        self.eager = eager
         self.constructor_params = constructor_params
+        self._resolver_fn = None
 
         self.configure_dependency()
 
@@ -123,63 +137,68 @@ class DependencyRegistration:
 
     def get_activate_constructor_params(
         self,
-        dependency_lookup: dict[str, 'DependencyRegistration']
+        provider
     ) -> dict[str, Any]:
         '''
         Gets the activated constructor parameters for the dependency.
 
-        `dependency_lookup`: A dictionary of dependency registrations.
+        `provider`: A ServiceProvider or ServiceScope used to resolve dependencies.
         '''
 
         constructor_params = dict()
 
-        # Verify that all other dependencies required by the this dependency
-        # are registered
         for param in self.constructor_params:
-            param_dependency = dependency_lookup.get(param.dependency_type)
-
-            # The dependeyc required by the constructor parameter could not
-            # be found in the dependency lookup (not registered)
-            if param_dependency is None:
-                raise Exception(
-                    f"Could not find dependency for '{param.dependency_type}' when activating '{self.type_name}' constructor params")
-
-            # Get activated instances of the dependencies required
-            # to instantiate this dependency (to be passed as kwargs
-            # downstream)
-            constructor_params[param.name] = param_dependency.activate(
-                dependency_lookup=dependency_lookup)
+            constructor_params[param.name] = provider.resolve(param.dependency_type)
 
         return constructor_params
 
     def activate(
         self,
-        dependency_lookup: dict[type, 'DependencyRegistration']
+        provider=None
     ) -> Any:
         '''
-        Get an activted instance of the dependency using the provided
-        dependency lookup.
+        Get an activated instance of the dependency.
 
-        `dependency_lookup`: A dictionary of dependency registrations.
+        `provider`: A ServiceProvider or ServiceScope used to resolve constructor dependencies.
         '''
 
-        # If it's a singleton and we've already built the instance then
-        # return the instance
+        # If it's a singleton and we've already built the instance then return it
         if self.lifetime == Lifetime.Singleton and self.built:
             return self.instance
 
-        # If it's a singleton and there are no constructor parameters
-        # then we can just return the instance
-        if self.lifetime == Lifetime.Singleton and len(self.constructor_params) == 0:
-            self.instance = self.implementation_type()
-            return self.instance
-
-        constructor_params = self.get_activate_constructor_params(
-            dependency_lookup=dependency_lookup)
+        if not self.constructor_params:
+            instance = self.implementation_type()
+        else:
+            constructor_params = self.get_activate_constructor_params(provider)
+            instance = self.implementation_type(**constructor_params)
 
         if self.lifetime == Lifetime.Singleton:
-            self.instance = self.implementation_type(**constructor_params)
+            self.instance = instance
+
+        return instance
+
+    async def activate_async(
+        self,
+        provider=None
+    ) -> Any:
+        '''
+        Async variant of activate, supporting coroutine constructors.
+
+        `provider`: A ServiceProvider or ServiceScope used to resolve constructor dependencies.
+        '''
+
+        if self.lifetime == Lifetime.Singleton and self.built:
             return self.instance
 
-        if self.lifetime == Lifetime.Transient:
-            return self.implementation_type(**constructor_params)
+        if not self.constructor_params:
+            instance = self.implementation_type()
+        else:
+            kwargs = {}
+            for param in self.constructor_params:
+                kwargs[param.name] = await provider.resolve_async(param.dependency_type)
+            instance = self.implementation_type(**kwargs)
+
+        if self.lifetime == Lifetime.Singleton:
+            self.instance = instance
+
+        return instance

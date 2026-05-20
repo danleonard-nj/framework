@@ -1,5 +1,5 @@
 
-
+# TODO: Switch to Pydantic model validation for AzureAdConfiguration, was causing issues
 class AzureAdConfiguration:
     def __init__(
         self,

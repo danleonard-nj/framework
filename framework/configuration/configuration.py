@@ -2,11 +2,23 @@ import json
 import os
 
 from framework.auth.configuration import AzureAdConfiguration
-from framework.constants.constants import ConfigurationPath, Environment
 from framework.exceptions.configuration import ConfigurationSourceException
 from framework.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+class ConfigurationPath:
+    Development = 'config.dev.json'
+    Production = 'config.json'
+    Local = 'config.local.json'
+
+
+class Environment:
+    DEVELOPMENT = 'Development'
+    PRODUCTION = 'Production'
+    LOCAL = 'Local'
+    ENV = 'FLASK_ENV'
 
 
 class Configuration:
@@ -91,5 +103,4 @@ class Configuration:
         self.__dict__.update(self._json)
 
         if 'auth' in self.__dict__:
-            self.ad_auth = AzureAdConfiguration(
-                configuration=self.auth)
+            self.ad_auth = AzureAdConfiguration(self.auth)

@@ -7,13 +7,13 @@ class InclusionType(Enum):
     IncludeAll = 1
     IncludeAny = 2
 
-
+@deprecated
 class ConfigurationPath:
     Development = 'config.dev.json'
     Production = 'config.json'
     Local = 'config.local.json'
 
-
+@deprecated
 class Environment:
     DEVELOPMENT = 'Development'
     PRODUCTION = 'Production'
