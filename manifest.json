@@ -12,6 +12,7 @@
     "redis",
     "httpx",
     "motor",
-    "deprecated"
+    "deprecated",
+    "swagger_gen"
   ]
 }
