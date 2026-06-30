@@ -2,7 +2,7 @@ import asyncio
 import inspect
 from collections import defaultdict
 from functools import wraps
-from threading import Lock
+from threading import Lock, RLock
 from typing import Any, Callable, Dict, List, Optional, Set
 
 from framework.di.dependencies import DependencyRegistration, Lifetime
@@ -92,7 +92,19 @@ class ServiceProvider:
         self._built_type_lookup = {}
 
         self._singleton_instances: dict[type, Any] = {}
-        self._cache_lock = Lock()
+        # RLock is required for recursive synchronous dependency resolution:
+        # singleton A's constructor may call resolve(B), which re-enters this
+        # lock on the same thread. A plain Lock would deadlock.
+        self._cache_lock = RLock()
+
+        # Per-type asyncio.Lock objects for coroutine-safe lazy singleton
+        # construction. A single global async lock would deadlock when singleton
+        # A's async constructor awaits resolve_async(B) (A → B → lock already
+        # held). Unrelated singleton types must also not serialise each other.
+        self._async_singleton_locks: dict[type, asyncio.Lock] = {}
+        # Tiny synchronous lock protecting only the lock-dictionary itself;
+        # never held across construction or any await.
+        self._async_lock_registry = Lock()
 
         self._initialize_provider()
 
@@ -129,40 +141,67 @@ class ServiceProvider:
         logger.debug(f"Resolving service for type: {_type.__name__}")
 
         registration = self._get_registered_dependency(implementation_type=_type)
+        dep_type = registration.dependency_type
 
         if registration.lifetime == Lifetime.Transient:
             if registration.factory:
-                return registration.factory(self)
+                result = registration.factory(self)
+                if inspect.isawaitable(result):
+                    raise RuntimeError(
+                        f"Factory for '{dep_type.__name__}' returned an awaitable. "
+                        "Use resolve_async() to resolve async factories.")
+                return result
             return registration.activate(self)
 
         elif registration.lifetime == Lifetime.Singleton:
             # Fast path: lock-free cache check
-            instance = self._singleton_instances.get(_type)
+            instance = self._singleton_instances.get(dep_type)
             if instance is not None:
                 return instance
 
             # Fall back to registration.instance (set during build())
             if registration.instance is not None:
-                self._singleton_instances[_type] = registration.instance
+                self._singleton_instances[dep_type] = registration.instance
                 return registration.instance
 
-            # Lazy singleton creation with double-checked locking
+            # Lazy singleton creation with double-checked locking.
+            # RLock allows the same thread to re-enter while constructing
+            # nested singletons (e.g. A's constructor resolves B).
             with self._cache_lock:
-                instance = self._singleton_instances.get(_type)
+                instance = self._singleton_instances.get(dep_type)
                 if instance is not None:
                     return instance
                 if registration.factory:
-                    instance = registration.factory(self)
+                    result = registration.factory(self)
+                    if inspect.isawaitable(result):
+                        raise RuntimeError(
+                            f"Factory for '{dep_type.__name__}' returned an awaitable. "
+                            "Use resolve_async() to resolve async factories.")
+                    instance = result
                 else:
                     instance = registration.activate(self)
                 registration.instance = instance
-                self._singleton_instances[_type] = instance
+                self._singleton_instances[dep_type] = instance
                 return instance
 
         elif registration.lifetime == Lifetime.Scoped:
             raise Exception('Scoped resolution requires a scope. Call provider.create_scope().')
 
         raise Exception(f"Unknown lifetime: {registration.lifetime}")
+
+    def _get_async_singleton_lock(self, dep_type: type) -> asyncio.Lock:
+        '''
+        Returns (creating lazily if needed) the per-type asyncio.Lock used for
+        coroutine-safe lazy singleton construction. Only the dictionary lookup
+        is protected by a synchronous lock; it is never held across construction
+        or an await.
+        '''
+        with self._async_lock_registry:
+            lock = self._async_singleton_locks.get(dep_type)
+            if lock is None:
+                lock = asyncio.Lock()
+                self._async_singleton_locks[dep_type] = lock
+        return lock
 
     async def resolve_async(self, _type: type) -> Any:
         '''
@@ -171,35 +210,45 @@ class ServiceProvider:
         logger.debug(f"Resolving (async) service for type: {_type.__name__}")
 
         registration = self._get_registered_dependency(implementation_type=_type)
+        dep_type = registration.dependency_type
 
         if registration.lifetime == Lifetime.Singleton:
-            instance = self._singleton_instances.get(_type)
+            instance = self._singleton_instances.get(dep_type)
             if instance is not None:
                 return instance
 
             if registration.instance is not None:
-                self._singleton_instances[_type] = registration.instance
+                self._singleton_instances[dep_type] = registration.instance
                 return registration.instance
 
-            with self._cache_lock:
-                instance = self._singleton_instances.get(_type)
+            # Per-type asyncio.Lock so that:
+            # 1. Concurrent coroutines for the same type create exactly one instance.
+            # 2. Nested resolution of a different type (A → B) uses B's own lock
+            #    and is not serialised with A's construction.
+            # 3. The lock is never held across construction or any await of an
+            #    unrelated resource — only across this singleton's own construction.
+            async_lock = self._get_async_singleton_lock(dep_type)
+            async with async_lock:
+                # Double-check after acquiring: another coroutine may have
+                # already constructed the instance while we waited.
+                instance = self._singleton_instances.get(dep_type)
                 if instance is not None:
                     return instance
                 if registration.factory:
                     inst = registration.factory(self)
-                    if asyncio.iscoroutine(inst):
+                    if inspect.isawaitable(inst):
                         inst = await inst
                     instance = inst
                 else:
                     instance = await registration.activate_async(self)
                 registration.instance = instance
-                self._singleton_instances[_type] = instance
+                self._singleton_instances[dep_type] = instance
                 return instance
 
         elif registration.lifetime == Lifetime.Transient:
             if registration.factory:
                 inst = registration.factory(self)
-                return await inst if asyncio.iscoroutine(inst) else inst
+                return await inst if inspect.isawaitable(inst) else inst
             return await registration.activate_async(self)
 
         elif registration.lifetime == Lifetime.Scoped:
@@ -292,8 +341,9 @@ class ServiceProvider:
                         inst = asyncio.run(inst)
                 registration.instance = inst
             else:
-                # For regular singletons, activate them
-                registration.activate(self)
+                # Capture the return value; do not rely solely on activate()
+                # mutating registration.instance as a side-effect.
+                registration.instance = registration.activate(self)
 
             with self._cache_lock:
                 self._singleton_instances[registration.dependency_type] = registration.instance
