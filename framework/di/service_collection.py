@@ -9,7 +9,7 @@ from framework.di.dependencies import (ConstructorDependency,
 
 @lru_cache(maxsize=2048)
 def get_signature(fn):
-    return inspect.signature(fn)
+    return inspect.signature(fn, eval_str=True)
 
 
 class ServiceCollection:

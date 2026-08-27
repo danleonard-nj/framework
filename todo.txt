@@ -1,0 +1,15 @@
+Make the smallest possible change to support async auth policies.
+
+Implement:
+
+- `AzureAd.validate_access_token_async(token, scheme)`
+- async authorization validation using `inspect.isawaitable`
+- decorator change from `auth_handler.validate_access_token(...)` to `await auth_handler.validate_access_token_async(...)`
+Constraints:
+
+- Preserve current public sync method.
+- Do not introduce event loop management.
+- Do not refactor naming, exceptions, DI, logging, or JWT internals unless required.
+- Auth policy functions may return either `bool` or an awaitable `bool`.
+- Also fix `get_bearer()` so missing or malformed Authorization headers raise the existing header exceptions.
+Return a minimal diff, spare tokens

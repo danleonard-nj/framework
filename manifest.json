@@ -1,18 +1,27 @@
 {
-  "version": "1.0.1",
+  "version": "6.0.2",
   "require": [
     "Werkzeug==2.2.2",
     "flask",
-    "quart",
+    "pandas",
+    "gunicorn",
+    "gevent",
     "requests",
+    "azure-identity",
+    "azure-keyvault-secrets",
+    "azure-keyvault-certificates",
+    "azure-keyvault-keys",
     "cryptography",
     "pyOpenSSL",
     "PyJWT",
     "python-dotenv",
+    "swagger-gen",
     "redis",
+    "pymongo",
+    "azure-servicebus",
+    "quart",
     "httpx",
     "motor",
-    "deprecated",
-    "swagger_gen"
+    "deprecated"
   ]
 }
