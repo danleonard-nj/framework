@@ -1,5 +1,5 @@
 {
-  "version": "6.0.2",
+  "version": "6.1.0",
   "require": [
     "Werkzeug==2.2.2",
     "flask",
@@ -17,11 +17,10 @@
     "python-dotenv",
     "swagger-gen",
     "redis",
-    "pymongo",
+    "pymongo>=4.9",
     "azure-servicebus",
     "quart",
     "httpx",
-    "motor",
     "deprecated"
   ]
 }

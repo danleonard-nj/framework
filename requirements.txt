@@ -14,11 +14,10 @@ PyJWT
 python-dotenv
 swagger-gen
 redis
-pymongo
+pymongo>=4.9
 redis
 azure-servicebus
 quart
 httpx
 aioredis
-motor
 pydantic

@@ -1,5 +1,7 @@
 from typing import Any, List
-from motor.core import AgnosticCollection, AgnosticDatabase
+
+from pymongo.asynchronous.collection import AsyncCollection
+from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.results import DeleteResult, InsertOneResult, UpdateResult
 
 
@@ -11,9 +13,9 @@ class MongoRepositoryAsync:
         collection: str,
     ) -> None:
         self.client = client
-        self.database: AgnosticDatabase = self.client.get_database(
+        self.database: AsyncDatabase = self.client.get_database(
             database)
-        self.collection: AgnosticCollection = self.database.get_collection(
+        self.collection: AsyncCollection = self.database.get_collection(
             collection)
 
     async def insert(self, document) -> InsertOneResult:
@@ -50,5 +52,5 @@ class MongoRepositoryAsync:
             docs.append(doc)
         return docs
 
-    async def query(self, filter):
-        return list(await self.collection.find(filter))
+    async def query(self, filter) -> List[Any]:
+        return await self.collection.find(filter).to_list()
