@@ -18,6 +18,6 @@ pymongo>=4.9
 redis
 azure-servicebus
 quart
-httpx
+httpx2
 aioredis
 pydantic
