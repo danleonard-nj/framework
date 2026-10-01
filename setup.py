@@ -11,9 +11,11 @@ with open('manifest.json', 'r') as file:
 
 version = manifest.get('version')
 requirements = manifest.get('require')
+extras = manifest.get('extras', dict())
 
 logging.info(f'Manifest version: {version}')
 logging.info(f'Manifest requirements: {requirements}')
+logging.info(f'Manifest extras: {extras}')
 
 DESCRIPTION = 'Framework'
 LONG_DESCRIPTION = 'Framework'
@@ -30,6 +32,7 @@ setup(
     # include_package_data=True,
     packages=find_packages(),
     install_requires=[requirements],
+    extras_require=extras,
     keywords=['python', 'framework'],
     classifiers=[
         "Development Status :: 3 - Alpha",

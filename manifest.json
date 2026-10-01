@@ -1,5 +1,5 @@
 {
-  "version": "6.1.1",
+  "version": "6.2.0",
   "require": [
     "Werkzeug==2.2.2",
     "flask",
@@ -22,5 +22,10 @@
     "quart",
     "httpx2",
     "deprecated"
-  ]
+  ],
+  "extras": {
+    "mcp": [
+      "mcp>=2.2,<2.3"
+    ]
+  }
 }
